@@ -1,0 +1,3347 @@
+<title>메이플키우기 스테이지 게이트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  color-scheme:dark;
+  /* 다크가 기본 — 게임 정보 사이트는 어두운 쪽이 초상화와 등급색을 살린다 */
+  --bg:#0C1016; --surface:#141A22; --surface-2:#1A2029; --surface-3:#232B36;
+  --line:#222932; --line-2:#323C49;
+  --ink:#E8EEF4; --ink-2:#A0AEBD; --ink-3:#6B798A;
+  --accent:#6B7BF0; --accent-ink:#A9B4FB; --accent-soft:#1B2144;
+  --clay:#E0785A; --clay-soft:#341F18;
+  --pass:#35C08A; --warn:#E9A13B; --fail:#EF5C5C;
+  --pass-soft:#0E2B22; --warn-soft:#33260F; --fail-soft:#331A1A;
+  --on-accent:#181005;
+  --shadow:0 1px 2px rgba(0,0,0,.45), 0 14px 34px -20px rgba(0,0,0,.95);
+  --r:10px;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    color-scheme:light;
+    --bg:#EFF1F4; --surface:#FFFFFF; --surface-2:#F5F7F9; --surface-3:#E7ECF0;
+    --line:#DCE2E8; --line-2:#C6CFD8;
+    --ink:#121820; --ink-2:#4A5866; --ink-3:#7C8A99;
+    --accent:#4655D6; --accent-ink:#3742B0; --accent-soft:#E7E9FB;
+    --clay:#B85536; --clay-soft:#F7E5DE;
+    --pass:#0E8A61; --warn:#B4741A; --fail:#C2423B;
+    --pass-soft:#DFF1EA; --warn-soft:#FAEDD6; --fail-soft:#F9E3E1;
+    --on-accent:#FFFFFF;
+    --shadow:0 1px 2px rgba(16,22,25,.05), 0 8px 24px -14px rgba(16,22,25,.22);
+  }
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#EFF1F4; --surface:#FFFFFF; --surface-2:#F5F7F9; --surface-3:#E7ECF0;
+  --line:#DCE2E8; --line-2:#C6CFD8;
+  --ink:#121820; --ink-2:#4A5866; --ink-3:#7C8A99;
+  --accent:#4655D6; --accent-ink:#3742B0; --accent-soft:#E7E9FB;
+  --clay:#B85536; --clay-soft:#F7E5DE;
+  --pass:#0E8A61; --warn:#B4741A; --fail:#C2423B;
+  --pass-soft:#DFF1EA; --warn-soft:#FAEDD6; --fail-soft:#F9E3E1;
+  --on-accent:#FFFFFF;
+  --shadow:0 1px 2px rgba(16,22,25,.05), 0 8px 24px -14px rgba(16,22,25,.22);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+.num{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+h1,h2,h3,h4{margin:0; text-wrap:balance; letter-spacing:-.015em; font-weight:700}
+p{margin:0}
+button,input,select{font:inherit; color:inherit}
+a{color:var(--accent-ink)}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px}
+
+.wrap{max-width:1380px; margin:0 auto; padding:0 24px}
+
+/* ---------- header ---------- */
+.top{
+  position:sticky; top:0; z-index:40; background:var(--bg);
+  background:color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter:blur(10px); border-bottom:1px solid var(--line);
+}
+.top .wrap{display:flex; align-items:center; gap:18px; height:60px}
+.brand{display:flex; align-items:baseline; gap:10px; margin-right:auto}
+.brand b{font-size:16px; letter-spacing:-.02em}
+.brand span{font-size:11px; color:var(--ink-3); letter-spacing:.08em; text-transform:uppercase}
+.vtag{
+  display:inline-flex; align-items:center; gap:7px; padding:5px 10px; border-radius:99px;
+  border:1px solid var(--line-2); background:var(--surface); font-size:11.5px; color:var(--ink-2);
+}
+.vtag i{width:6px;height:6px;border-radius:50%;background:var(--accent); font-style:normal}
+.tbtn{
+  width:34px;height:34px; display:grid; place-items:center; border-radius:8px;
+  border:1px solid var(--line-2); background:var(--surface); cursor:pointer; color:var(--ink-2);
+}
+.tbtn:hover{color:var(--ink); border-color:var(--ink-3)}
+
+.chip{
+  display:inline-flex; align-items:center; gap:7px; padding:6px 11px; border-radius:7px;
+  font-size:12px; border:1px solid var(--line-2); background:var(--surface); color:var(--ink-2);
+}
+.chip b{font-weight:600; color:var(--ink)}
+.chip.ok{background:var(--pass-soft); border-color:transparent; color:var(--pass)}
+.chip.ok b{color:var(--pass)}
+.chip.est{background:var(--warn-soft); border-color:transparent; color:var(--warn)}
+.chip.est b{color:var(--warn)}
+.chip.no{background:var(--fail-soft); border-color:transparent; color:var(--fail)}
+.chip.no b{color:var(--fail)}
+
+/* ---------- app shell ---------- */
+.app{display:grid; grid-template-columns:1fr; gap:22px; padding:26px 0 60px}
+@media(min-width:1060px){ .app{grid-template-columns:312px minmax(0,1fr); align-items:start} }
+
+.rail{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow); overflow:hidden;
+}
+@media(min-width:1060px){ .rail{position:sticky; top:80px; max-height:calc(100vh - 104px); display:flex; flex-direction:column} }
+.rail-h{padding:14px 15px 12px; border-bottom:1px solid var(--line); display:grid; gap:11px}
+.lbl{font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--ink-3); font-weight:600}
+.field{
+  width:100%; padding:8px 11px; border-radius:8px; border:1px solid var(--line-2);
+  background:var(--surface-2); font-size:13.5px;
+}
+.field:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+.segs{display:flex; flex-wrap:wrap; gap:6px}
+.seg{
+  padding:5px 10px; border-radius:7px; border:1px solid var(--line-2); background:var(--surface-2);
+  font-size:12px; cursor:pointer; color:var(--ink-2);
+}
+.seg:hover{border-color:var(--ink-3)}
+.seg[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--on-accent); font-weight:600}
+
+.rail-list{overflow-y:auto; flex:1; min-height:180px; max-height:52vh}
+@media(min-width:1060px){ .rail-list{max-height:none} }
+.sitem{
+  width:100%; text-align:left; display:grid; grid-template-columns:1fr auto; gap:2px 10px;
+  padding:9px 15px; border:0; border-bottom:1px solid var(--line); background:transparent; cursor:pointer;
+}
+.sitem:hover{background:var(--surface-2)}
+.sitem[aria-current="true"]{background:var(--accent-soft)}
+.sitem[aria-current="true"] .sid{color:var(--accent-ink)}
+.sid{font-size:13.5px; font-weight:600; font-family:"IBM Plex Mono",monospace}
+.smeta{grid-column:1/-1; font-size:11px; color:var(--ink-3); display:flex; gap:8px; flex-wrap:wrap}
+.mtag{font-size:10.5px; padding:2px 6px; border-radius:5px; background:var(--surface-3); color:var(--ink-2); align-self:start}
+.mtag.rush{background:var(--clay-soft); color:var(--clay)}
+.rail-f{padding:9px 15px; border-top:1px solid var(--line); font-size:11.5px; color:var(--ink-3)}
+
+/* ---------- readout ---------- */
+.read{display:grid; gap:18px; min-width:0}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow)}
+.card-h{padding:15px 18px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.card-h h3{font-size:14.5px}
+.card-h .lbl{margin-right:auto}
+.card-b{padding:18px}
+
+.stage-h{display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap; padding:18px}
+.stage-h h2{font-size:26px; font-family:"IBM Plex Mono",monospace; letter-spacing:-.02em}
+.stage-sub{color:var(--ink-2); font-size:13px}
+
+.tiles{display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr)); gap:1px; background:var(--line); border-top:1px solid var(--line)}
+.tile{background:var(--surface); padding:15px 18px; display:grid; gap:5px}
+.tile .lbl{display:flex; align-items:center; gap:6px}
+.tile .v{font-size:23px; font-weight:600; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; letter-spacing:-.02em; line-height:1.15}
+.tile .sub{font-size:11.5px; color:var(--ink-3); font-family:"IBM Plex Mono",monospace}
+.tile.acc .v{color:var(--accent)}
+.tile.gate .v{color:var(--clay)}
+
+.dot{width:6px;height:6px;border-radius:50%; display:inline-block}
+.dot.ok{background:var(--pass)} .dot.est{background:var(--warn)} .dot.no{background:var(--fail)}
+
+.grid2{display:grid; gap:18px}
+@media(min-width:900px){ .grid2{grid-template-columns:1fr 1fr} }
+
+.gaterow{display:grid; grid-template-columns:auto 1fr; gap:10px 14px; align-items:center}
+.inline-in{width:120px; padding:7px 10px; border-radius:8px; border:1px solid var(--line-2); background:var(--surface-2); font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-size:14px; text-align:right}
+.inline-in:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+input[type=range]{width:100%; accent-color:var(--accent)}
+
+.verdict{display:flex; align-items:center; gap:10px; padding:11px 13px; border-radius:8px; font-size:13px; margin-top:14px}
+.verdict.ok{background:var(--pass-soft); color:var(--pass)}
+.verdict.warn{background:var(--warn-soft); color:var(--warn)}
+.verdict.bad{background:var(--fail-soft); color:var(--fail)}
+.verdict b{font-weight:600}
+.chart{width:100%; height:132px; display:block; margin-top:10px}
+
+table{width:100%; border-collapse:collapse; font-size:13px}
+.tscroll{overflow-x:auto}
+th{
+  text-align:left; font-size:10.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--ink-3);
+  font-weight:600; padding:0 12px 8px; white-space:nowrap; border-bottom:1px solid var(--line);
+}
+td{padding:9px 12px; border-bottom:1px solid var(--line); white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td.n{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+.bosspill{font-size:10.5px; padding:2px 6px; border-radius:5px; background:var(--clay-soft); color:var(--clay); font-weight:600}
+
+.inputs{display:grid; grid-template-columns:repeat(auto-fit,minmax(146px,1fr)); gap:11px}
+.inp{display:grid; gap:5px}
+.inp label{font-size:11.5px; color:var(--ink-2)}
+.inp select{width:100%; padding:7px 10px; border-radius:8px; border:1px solid var(--line-2);
+  background:var(--surface-2); font-size:12.5px}
+.inp select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+.inp input{width:100%; padding:7px 10px; border-radius:8px; border:1px solid var(--line-2); background:var(--surface-2); font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-size:13.5px; text-align:right}
+.inp input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+
+.meter{height:10px; border-radius:99px; background:var(--surface-3); overflow:hidden; position:relative; margin:12px 0 6px}
+.meter i{position:absolute; inset:0 auto 0 0; border-radius:99px; background:var(--accent)}
+.meter i.over{background:var(--pass)} .meter i.under{background:var(--fail)}
+.meter b{position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--ink-2); left:100%}
+.stack{display:flex; height:16px; border-radius:5px; overflow:hidden; background:var(--surface-3); margin:14px 0 10px}
+.stack i{display:block; height:100%}
+.stack i.eff{background:var(--accent)}
+.stack i.out{background:var(--ink-3); opacity:.45}
+.stack i.dead{background:var(--clay)}
+.legend{display:flex; flex-wrap:wrap; gap:14px; font-size:11.5px; color:var(--ink-2)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.legend b{width:9px; height:9px; border-radius:3px; display:inline-block}
+.legend b.eff{background:var(--accent)} .legend b.out{background:var(--ink-3); opacity:.45} .legend b.dead{background:var(--clay)}
+.deadrow{display:grid; grid-template-columns:1fr auto auto; gap:10px 14px; align-items:center; padding:8px 0; border-bottom:1px solid var(--line); font-size:13px}
+.deadrow:last-child{border-bottom:0}
+.deadrow .why{font-size:11.5px; color:var(--ink-3)}
+.deadrow .amt{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; color:var(--clay); font-size:12.5px}
+.deadrow .cpv{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; color:var(--ink-3); font-size:11.5px}
+details.more{border-top:1px solid var(--line); padding-top:14px}
+details.more>summary{cursor:pointer; font-size:12.5px; color:var(--ink-2); list-style:none; display:flex; align-items:center; gap:7px}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸"; color:var(--ink-3); font-size:11px}
+details.more[open]>summary::before{content:"▾"}
+details.more>summary:hover{color:var(--ink)}
+.presetbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+  padding:12px 14px; border:1px solid var(--line); border-radius:8px; background:var(--surface-2)}
+.presetbar .field{width:auto; min-width:170px}
+.pchip{display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:7px;
+  border:1px solid var(--line-2); background:var(--surface); font-size:12px; cursor:pointer; color:var(--ink-2)}
+.pchip:hover{border-color:var(--accent); color:var(--ink)}
+.pchip[aria-current="true"]{background:var(--accent); border-color:var(--accent); color:var(--on-accent); font-weight:600}
+.pchip b{font-weight:600}
+.pchip .x{opacity:.5; font-size:13px; line-height:1}
+.pchip .x:hover{opacity:1; color:var(--fail)}
+.notes{display:grid; gap:8px; margin-top:14px}
+#subSum{gap:8px}
+.note{display:flex; gap:9px; padding:10px 12px; border-radius:8px; font-size:12.5px; align-items:flex-start; line-height:1.5}
+.note.warn{background:var(--warn-soft); color:var(--warn)}
+.note.bad{background:var(--fail-soft); color:var(--fail)}
+.note.ok{background:var(--pass-soft); color:var(--pass)}
+.note.neutral{background:var(--surface-2); color:var(--ink-2)}
+
+.cards3{display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(272px,1fr))}
+.mini{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:16px 17px; display:grid; gap:8px; align-content:start}
+.mini h4{font-size:13.5px}
+.mini p{font-size:12.5px; color:var(--ink-2); line-height:1.6}
+.mini code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:var(--surface-2); padding:1px 5px; border-radius:4px; color:var(--ink)}
+.ruleconf{font-size:10.5px; font-family:"IBM Plex Mono",monospace; color:var(--ink-3)}
+
+.hint{font-size:11.5px; color:var(--ink-3); margin-top:10px; line-height:1.55}
+.tag{display:inline-block; font-size:10.5px; font-weight:600; letter-spacing:.02em;
+     padding:2px 7px; border-radius:99px; white-space:nowrap}
+.tag.keep{background:var(--pass-soft); color:var(--pass)}
+.tag.trim{background:var(--warn-soft); color:var(--warn)}
+.tag.drop{background:var(--fail-soft); color:var(--fail)}
+.tag.na{background:var(--surface-2); color:var(--ink-3)}
+.foot{border-top:1px solid var(--line); padding:26px 0 46px; font-size:12px; color:var(--ink-3)}
+.foot .wrap{display:grid; gap:9px}
+.foot b{color:var(--ink-2); font-weight:600}
+
+@media (prefers-reduced-motion: no-preference){
+  .abar i, .meter i, .tile .v{transition:width .35s cubic-bezier(.2,.7,.3,1)}
+}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ---------- 직업군 색 ---------- */
+:root{ --fam-warrior:#E5825C; --fam-mage:#79A7F5; --fam-archer:#4FC98D; --fam-thief:#B08CF0; }
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
+  --fam-warrior:#B84E2D; --fam-mage:#3B6ED0; --fam-archer:#1F8C5E; --fam-thief:#7A52C4; } }
+:root[data-theme="light"]{
+  --fam-warrior:#B84E2D; --fam-mage:#3B6ED0; --fam-archer:#1F8C5E; --fam-thief:#7A52C4; }
+
+/* ---------- 직업 선택 버튼 ---------- */
+.jobgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(80px,1fr)); gap:8px}
+.jobbtn{
+  --jc:var(--ink-3);
+  display:grid; gap:6px; justify-items:center; padding:8px 4px 7px; cursor:pointer;
+  border:1px solid var(--line); border-radius:10px; background:var(--surface-2); color:var(--ink-2);
+}
+.jobbtn[data-fam="전사"]{--jc:var(--fam-warrior)}
+.jobbtn[data-fam="법사"]{--jc:var(--fam-mage)}
+.jobbtn[data-fam="궁수"]{--jc:var(--fam-archer)}
+.jobbtn[data-fam="도적"]{--jc:var(--fam-thief)}
+.jobbtn:hover{border-color:var(--jc); background:var(--surface)}
+.jobbtn[aria-checked="true"]{
+  border-color:var(--jc); background:var(--surface);
+  box-shadow:inset 0 0 0 1px var(--jc), 0 2px 10px -6px var(--jc);
+}
+.jobbtn[aria-checked="true"] .jname{color:var(--ink); font-weight:600}
+.jface{
+  width:46px; height:46px; border-radius:9px; overflow:hidden; display:grid; place-items:center;
+  background:color-mix(in srgb, var(--jc) 12%, var(--surface));
+  box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--jc) 26%, transparent);
+}
+.jface img{width:100%; height:100%; object-fit:cover; display:block}
+.jface svg{width:24px; height:24px; color:var(--jc)}
+.jname{font-size:11.5px; line-height:1.25; text-align:center; letter-spacing:-.02em}
+.jsub{font-size:10px; color:var(--ink-3)}
+.slabel{display:block; font-size:11.5px; color:var(--ink-2); margin-bottom:5px}
+
+/* ---------- 탭 ---------- */
+.tabbar{border-top:1px solid var(--line)}
+.tabs{display:flex; gap:2px; overflow-x:auto; scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex:0 0 auto; padding:11px 15px 10px; border:0; background:transparent; cursor:pointer;
+  font-size:13.5px; color:var(--ink-3); border-bottom:2px solid transparent; white-space:nowrap;
+}
+.tab:hover{color:var(--ink-2)}
+.tab[aria-selected="true"]{color:var(--ink); font-weight:600; border-bottom-color:var(--accent)}
+.panel[hidden]{display:none}
+.pad{padding:26px 0 60px; display:grid; gap:18px}
+
+/* ---------- 홈 (안내형) ---------- */
+.hero3{position:relative; background:var(--bg); padding-top:26px}
+.heroin{position:relative; display:grid; gap:16px;
+  background:var(--surface); border:1px solid var(--line); border-radius:18px;
+  padding:26px 26px 24px; box-shadow:var(--shadow)}
+.askhead{text-align:center; display:grid; gap:8px; margin-bottom:4px}
+.askq{font-size:clamp(24px,3.6vw,34px); letter-spacing:-.03em; line-height:1.2}
+.asksub{font-size:14px; color:var(--ink-2); max-width:52ch; margin:0 auto}
+
+.steprow{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:6px}
+.stepno{width:26px; height:26px; flex:0 0 auto; border-radius:50%; display:grid; place-items:center;
+  background:var(--accent); color:var(--on-accent); font-weight:700; font-size:14px;
+  font-family:"IBM Plex Mono",monospace}
+.steplabel{font-size:16px; font-weight:700; letter-spacing:-.02em}
+.stephint{font-size:12px; color:var(--ink-3)}
+.steprow .btn.ghost{margin-left:auto}
+
+/* 큰 직업 그림 버튼 */
+.jobgrid.big{grid-template-columns:repeat(auto-fill,minmax(92px,1fr)); gap:10px}
+.jobgrid.big .jobbtn{padding:11px 6px 9px; border-radius:14px; gap:8px}
+.jobgrid.big .jface{width:60px; height:60px; border-radius:13px}
+.jobgrid.big .jname{font-size:12.5px}
+.jobgrid.big .jobbtn[aria-checked="true"]{box-shadow:inset 0 0 0 2px var(--jc), 0 6px 18px -10px var(--jc)}
+
+/* 큰 신호등 결과 */
+.bigresult{margin-top:2px}
+.brempty{display:grid; gap:14px; justify-items:center; text-align:center;
+  padding:26px 18px; border:2px dashed var(--line-2); border-radius:16px; background:var(--surface-2)}
+.bricon{width:46px; height:46px; border-radius:50%; border:3px solid var(--line-2); position:relative}
+.bricon::after{content:""; position:absolute; inset:12px; border-radius:50%; background:var(--accent)}
+.brempty .brmsg{font-size:15px; color:var(--ink-2)}
+.brempty .brmsg b{color:var(--ink)}
+.brbtns{display:flex; gap:10px; flex-wrap:wrap; justify-content:center}
+.btn.xl{padding:13px 22px; font-size:15px; border-radius:12px}
+
+.brsignal{display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+  padding:20px 22px; border-radius:16px; border:1px solid transparent}
+.brsignal.ok{background:var(--pass-soft); border-color:color-mix(in srgb,var(--pass) 35%,transparent)}
+.brsignal.edge{background:var(--warn-soft); border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
+.brsignal.no{background:var(--fail-soft); border-color:color-mix(in srgb,var(--fail) 35%,transparent)}
+.sigdot{border-radius:50%; display:inline-block; flex:0 0 auto}
+.sigdot.ok{background:var(--pass)} .sigdot.edge{background:var(--warn)} .sigdot.no{background:var(--fail)}
+.brdot{width:46px; height:46px; position:relative;
+  box-shadow:0 0 0 6px color-mix(in srgb,currentColor 18%,transparent)}
+.brdot.ok{color:var(--pass)} .brdot.edge{color:var(--warn)} .brdot.no{color:var(--fail)}
+.brmain{flex:1 1 240px; display:grid; gap:5px; min-width:0}
+.brbig{font-size:clamp(20px,2.8vw,26px); font-weight:700; letter-spacing:-.03em; color:var(--ink)}
+.brbig b{color:inherit}
+.brsmall{font-size:14px; color:var(--ink-2)}
+.brsignal .btn{flex:0 0 auto}
+
+.brchips{display:grid; grid-template-columns:repeat(auto-fit,minmax(78px,1fr)); gap:7px; margin-top:12px}
+.brchip{display:grid; gap:2px; justify-items:center; text-align:center; cursor:pointer;
+  padding:9px 4px 8px; border-radius:11px; background:var(--surface-2); border-top:3px solid var(--line-2)}
+.brchip:hover{background:var(--surface-3)}
+.brchip.ok{border-top-color:var(--pass)} .brchip.edge{border-top-color:var(--warn)} .brchip.no{border-top-color:var(--fail)}
+.brchip .bcs{width:12px; height:12px; margin:1px auto 2px}
+.brchip .bcid{font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:12.5px; letter-spacing:-.02em}
+.brchip .bcp{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-3)}
+.brchip.here{outline:2px solid var(--accent); outline-offset:-1px}
+
+.searchwrap{position:relative; max-width:620px; width:100%}
+.searchbig{
+  width:100%; padding:13px 16px; font-size:14.5px; border-radius:10px;
+  border:1px solid var(--line-2); background:var(--surface);
+}
+.searchbig:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+.datanote{font-size:11.5px; color:var(--ink-3); line-height:1.7}
+.datanote b{color:var(--ink-2); font-weight:600; font-family:"IBM Plex Mono",monospace}
+.qout{
+  position:absolute; z-index:30; top:calc(100% + 6px); left:0; right:0; max-height:min(60vh,420px);
+  overflow-y:auto; background:var(--surface); border:1px solid var(--line-2);
+  border-radius:10px; box-shadow:var(--shadow);
+}
+.qrow{
+  display:grid; grid-template-columns:34px 1fr auto; gap:11px; align-items:center;
+  width:100%; text-align:left; padding:9px 13px; border:0; border-bottom:1px solid var(--line);
+  background:transparent; cursor:pointer;
+}
+.qrow:last-child{border-bottom:0}
+.qrow:hover,.qrow:focus-visible{background:var(--surface-2)}
+.qrow .qi{width:34px;height:34px;border-radius:7px;overflow:hidden;display:grid;place-items:center;
+  background:var(--surface-2)}
+.qrow .qi img{width:100%;height:100%;object-fit:cover}
+.qrow .qn{font-size:13.5px; font-weight:600; letter-spacing:-.01em}
+.qrow .qs{font-size:11.5px; color:var(--ink-3); margin-top:2px}
+.qkind{font-size:10.5px; padding:2px 7px; border-radius:99px; background:var(--surface-3); color:var(--ink-2)}
+.qempty{padding:14px; font-size:12.5px; color:var(--ink-3)}
+
+/* 랭킹 섹션 — 카드 껍데기 없이 구분선으로만 */
+.homegrid{display:grid; gap:16px; padding:20px 0 10px; grid-template-columns:1fr}
+@media(min-width:900px){ .homegrid{grid-template-columns:1fr 1fr} .rsec.wide{grid-column:1/-1} }
+.rsec{display:flex; flex-direction:column; align-content:start; min-width:0;
+  background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow)}
+.rhead{display:flex; align-items:baseline; gap:11px; flex-wrap:wrap;
+  padding:14px 18px; border-bottom:1px solid var(--line); background:var(--surface-2);
+  border-radius:14px 14px 0 0}
+.rhead h2{font-size:15px; letter-spacing:-.02em}
+.rsub{font-size:11.5px; color:var(--ink-3)}
+.rsec > div:not(.rhead){padding:6px 18px 12px}
+.rsec .rempty,.rsec .card-b{padding:14px 18px}
+.rmore{margin-left:auto; border:0; background:transparent; cursor:pointer; padding:0;
+  font-size:12px; color:var(--accent-ink)}
+.rmore:hover{text-decoration:underline}
+.rmore::after{content:" ›"}
+
+.heroin.land{gap:14px}
+.heroin.land .askhead{margin-bottom:2px}
+.searchwrap{position:relative; width:100%; max-width:640px; margin:0 auto}
+.landgrid{display:grid; gap:16px; padding:20px 0 40px; grid-template-columns:1fr}
+@media(min-width:820px){ .landgrid{grid-template-columns:1fr 1fr} .landgrid .rsec.wide{grid-column:1/-1} }
+
+/* Top 3 랭킹 카드 */
+.top3{display:grid; gap:10px; grid-template-columns:1fr; padding:14px 18px}
+@media(min-width:640px){ .top3{grid-template-columns:repeat(3,1fr)} }
+.t3{display:grid; gap:8px; justify-items:center; text-align:center; padding:16px 12px;
+  border:1px solid var(--line); border-radius:13px; background:var(--surface-2); position:relative}
+.t3 .medal{font-size:22px; line-height:1}
+.t3.r1{border-color:color-mix(in srgb,var(--accent) 45%,transparent); background:var(--accent-soft)}
+.t3 .t3i{width:56px; height:56px; border-radius:12px; overflow:hidden; background:var(--surface-3);
+  box-shadow:inset 0 0 0 1px var(--line)}
+.t3 .t3i img{width:100%;height:100%;object-fit:cover;display:block}
+.t3 .t3n{font-size:14px; font-weight:700; letter-spacing:-.01em; max-width:100%;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.t3 .t3s{font-size:11.5px; color:var(--ink-3)}
+.t3 .t3cp{font-family:"IBM Plex Mono",monospace; font-weight:700; font-size:17px;
+  color:var(--accent-ink); letter-spacing:-.02em}
+.rankempty{padding:16px 18px; font-size:12.5px; color:var(--ink-3); line-height:1.6}
+
+/* 공지·이벤트 목록 */
+.newslist{display:grid; gap:2px; padding:6px 10px 12px}
+.newsrow{display:flex; align-items:center; gap:11px; padding:9px 8px; border-radius:9px;
+  text-decoration:none; color:inherit; border-bottom:1px solid var(--line)}
+.newslist .newsrow:last-child{border-bottom:0}
+.newsrow:hover{background:var(--surface-2)}
+.newsrow .nthumb{width:52px; height:34px; border-radius:6px; overflow:hidden; flex:0 0 auto;
+  background:var(--surface-3)}
+.newsrow .nthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.newsrow .nmain{min-width:0; flex:1}
+.newsrow .ntag{font-size:10px; font-weight:700; padding:1px 6px; border-radius:99px; margin-right:6px;
+  background:var(--accent-soft); color:var(--accent-ink)}
+.newsrow .ntag.ev{background:var(--pass-soft); color:var(--pass)}
+.newsrow .ntt{font-size:13px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:inline}
+.newsrow .ndate{font-size:11px; color:var(--ink-3); margin-top:2px}
+.newsrow .narr{color:var(--ink-3); font-size:14px; flex:0 0 auto}
+
+/* 랭킹 행 — 초상화를 크게 쓰고 순위는 배지로 */
+.rrow{display:grid; grid-template-columns:26px 44px minmax(0,1fr) minmax(80px,150px) auto;
+  gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid var(--line)}
+.rrow:last-child{border-bottom:0}
+.rrow .rn{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-3);
+  text-align:center; font-weight:600}
+.rrow.top1 .rn,.rrow.top2 .rn,.rrow.top3 .rn{
+  color:var(--on-accent); background:var(--accent); border-radius:6px; padding:3px 0}
+.rrow.top2 .rn{background:var(--ink-2)} .rrow.top3 .rn{background:var(--clay)}
+.rrow .ri{width:44px;height:44px;border-radius:9px;overflow:hidden;display:grid;place-items:center;
+  background:var(--surface-2); box-shadow:inset 0 0 0 1px var(--line)}
+.rrow .ri img{width:100%;height:100%;object-fit:cover;display:block}
+.rrow .rt{font-size:13.5px; font-weight:600; letter-spacing:-.01em;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.rrow .rd{font-size:11px; color:var(--ink-3); margin-top:2px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.rrow .rv{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;
+  font-size:14px; font-weight:600; text-align:right; white-space:nowrap; color:var(--ink)}
+.rb{height:5px;border-radius:99px;background:var(--surface-3);overflow:hidden;position:relative}
+.rb i{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:99px;opacity:.85}
+.rrow[data-me="1"]{background:var(--accent-soft); border-radius:8px;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent)}
+.rrow[data-me="1"] .rt{color:var(--accent-ink)}
+.rrow.clickable{cursor:pointer}
+.rrow.clickable:hover{background:var(--surface-2); border-radius:8px}
+@media(max-width:560px){ .rrow{grid-template-columns:24px 40px minmax(0,1fr) auto} .rrow .rb{display:none} }
+.rempty{padding:14px 2px; font-size:12.5px; color:var(--ink-3); line-height:1.65}
+
+/* 진행 막대 */
+.progbar{display:flex; height:9px; border-radius:99px; overflow:hidden; background:var(--surface-3)}
+.progbar i{display:block; height:100%}
+.progbar i.ok{background:var(--pass)} .progbar i.edge{background:var(--warn)} .progbar i.no{background:var(--fail)}
+.proglist{display:grid; gap:6px; grid-template-columns:repeat(auto-fit,minmax(92px,1fr))}
+.progrow{
+  display:grid; gap:3px; justify-items:center; text-align:center; cursor:pointer;
+  padding:9px 6px 8px; border-radius:9px; background:var(--surface-2);
+  border-top:2px solid var(--line-2);
+}
+.progrow:hover{background:var(--surface-3)}
+.progrow.ok{border-top-color:var(--pass)} .progrow.edge{border-top-color:var(--warn)}
+.progrow.no{border-top-color:var(--fail)}
+.progrow .pid{font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:12.5px; letter-spacing:-.02em}
+.progrow .pp{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;
+  font-weight:600; font-size:18px; letter-spacing:-.03em; line-height:1.15}
+.progrow.ok .pp{color:var(--pass)} .progrow.edge .pp{color:var(--warn)} .progrow.no .pp{color:var(--fail)}
+.progrow .pd{font-size:10px; color:var(--ink-3)}
+.progrow.here{background:var(--accent-soft); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent)}
+.progrow.here .pid{color:var(--accent-ink)}
+.proghead{font-size:13.5px; line-height:1.6; color:var(--ink-2); margin:2px 0 10px}
+.proghead b{color:var(--ink)}
+
+/* 내 세팅 요약 바 */
+.mebar{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:22px;
+  padding:11px 14px; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
+.mebar .mi{width:38px;height:38px;border-radius:8px;overflow:hidden;background:var(--surface-2)}
+.mebar .mi img{width:100%;height:100%;object-fit:cover;display:block}
+.mebar .mt{font-size:13px; font-weight:600}
+.mebar .ms{font-size:11.5px; color:var(--ink-3); margin-top:2px}
+.mebar .grow{margin-left:auto}
+
+/* ---------- 도감 ---------- */
+.dexbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+  padding:13px 18px; border-bottom:1px solid var(--line); background:var(--surface-2)}
+.dexbar .field{width:auto; min-width:170px}
+.mcell{display:flex; align-items:center; gap:10px; min-width:0}
+.mcell .mi{width:40px;height:40px;border-radius:8px;overflow:hidden;flex:0 0 40px;
+  background:var(--surface-2); display:grid; place-items:center; color:var(--ink-3); font-size:15px;
+  box-shadow:inset 0 0 0 1px var(--line)}
+.mcell .mi:empty::before{content:"?"; font-size:13px; opacity:.6}
+.mcell .mi img{width:100%;height:100%;object-fit:cover;display:block}
+.mcell b{font-weight:600; font-size:13px}
+td .rngsub{font-size:10.5px; color:var(--ink-3)}
+
+.sdrow{display:grid; grid-template-columns:22px 46px minmax(0,1fr) minmax(70px,130px) 92px;
+  gap:12px; align-items:center; padding:11px 18px; border-bottom:1px solid var(--line)}
+.sdrow:last-child{border-bottom:0}
+.sdrow .si{width:46px;height:46px;border-radius:9px;overflow:hidden;background:var(--surface-2)}
+.sdrow .si img{width:100%;height:100%;object-fit:cover;display:block}
+.sdrow.mine{background:var(--accent-soft)}
+.sdname{font-size:13.5px; font-weight:600; display:flex; gap:7px; align-items:center; flex-wrap:wrap}
+.sdsub{font-size:11px; color:var(--ink-3); margin-top:3px}
+.gpill{font-size:10px; font-weight:600; padding:2px 7px; border-radius:99px; color:var(--surface)}
+.gpill[data-g="레어"]{background:var(--g-rare)}
+.gpill[data-g="에픽"]{background:var(--g-epic)}
+.gpill[data-g="유니크"]{background:var(--g-uniq)}
+.gpill[data-g="레전드리"]{background:var(--g-lgnd)}
+
+.artgrid{display:grid; gap:1px; background:var(--line);
+  grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+.artcard{background:var(--surface); padding:14px; display:grid; gap:9px; justify-items:center; text-align:center}
+.artcard .ai{width:56px;height:56px;border-radius:10px;overflow:hidden;background:var(--surface-2)}
+.artcard .ai img{width:100%;height:100%;object-fit:contain;display:block}
+.artcard .an2{font-size:11.5px; font-family:"IBM Plex Mono",monospace; color:var(--ink-2)}
+.artcard .ao{font-size:11.5px; color:var(--ink-3); line-height:1.5}
+
+/* ---------- 동료 슬롯 · 등급 ---------- */
+:root{ --g-rare:#79A7F5; --g-epic:#B792F0; --g-uniq:#E2B450; --g-lgnd:#4FCB8C; }
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
+  --g-rare:#2E6BC0; --g-epic:#7A46C8; --g-uniq:#9C6F12; --g-lgnd:#128053; } }
+:root[data-theme="light"]{
+  --g-rare:#2E6BC0; --g-epic:#7A46C8; --g-uniq:#9C6F12; --g-lgnd:#128053; }
+
+.supslots{display:flex; gap:8px; flex-wrap:wrap; align-items:flex-start}
+.supslot{
+  --sc:var(--line-2);
+  display:grid; gap:5px; justify-items:center; align-content:start;
+  padding:9px 8px 8px; min-width:80px; cursor:pointer;
+  border:1px solid var(--line); border-radius:10px; background:var(--surface-2); color:var(--ink-2);
+}
+.supslot[data-grade="레어"]{--sc:var(--g-rare)}
+.supslot[data-grade="에픽"]{--sc:var(--g-epic)}
+.supslot[data-grade="유니크"]{--sc:var(--g-uniq)}
+.supslot[data-grade="레전드리"]{--sc:var(--g-lgnd)}
+.supslot:hover{background:var(--surface); border-color:var(--sc)}
+.supslot[aria-current="true"]{background:var(--surface); border-color:var(--accent);
+  box-shadow:inset 0 0 0 1px var(--accent)}
+.supslot[aria-current="true"] .sname{color:var(--ink); font-weight:600}
+.supslot.empty{border-style:dashed}
+.supslot.main{min-width:108px; padding:11px 12px 10px}
+.sface{
+  width:44px; height:44px; border-radius:9px; overflow:hidden; display:grid; place-items:center;
+  background:color-mix(in srgb, var(--sc) 12%, var(--surface));
+  box-shadow:inset 0 0 0 1.5px color-mix(in srgb, var(--sc) 55%, transparent);
+}
+.supslot.main .sface{width:64px; height:64px; border-radius:11px}
+.sface img{width:100%; height:100%; object-fit:cover; display:block}
+.sface.plus{background:transparent; box-shadow:inset 0 0 0 1.5px var(--line-2);
+  color:var(--ink-3); font-size:19px; font-weight:300; line-height:1}
+.sname{font-size:11.5px; line-height:1.2; letter-spacing:-.02em; text-align:center}
+.sgrade{font-size:10px; font-weight:600; color:var(--sc); font-family:"IBM Plex Mono",monospace}
+.supslot.empty .sgrade{color:var(--ink-3); font-weight:400}
+
+.suppick{border:1px solid var(--line); border-radius:10px; background:var(--surface-2);
+  padding:14px; display:grid; gap:12px; margin-top:12px}
+.pickhead{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.pickhead .lbl{margin-right:auto; text-transform:none; letter-spacing:0; font-size:12.5px; color:var(--ink-2)}
+.pickhead .cap{font-size:11px; color:var(--ink-3); font-family:"IBM Plex Mono",monospace}
+.pickrow{display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end}
+.seg.grade[data-g="레어"][aria-pressed="true"]{background:var(--g-rare); border-color:var(--g-rare); color:var(--surface)}
+.seg.grade[data-g="에픽"][aria-pressed="true"]{background:var(--g-epic); border-color:var(--g-epic); color:var(--surface)}
+.seg.grade[data-g="유니크"][aria-pressed="true"]{background:var(--g-uniq); border-color:var(--g-uniq); color:var(--surface)}
+.seg.grade[data-g="레전드리"][aria-pressed="true"]{background:var(--g-lgnd); border-color:var(--g-lgnd); color:var(--surface)}
+.seg:disabled{opacity:.45; cursor:default}
+.seg:disabled:hover{border-color:var(--line-2)}
+
+/* ---------- 결과 ---------- */
+.result{
+  display:flex; gap:22px; align-items:center; flex-wrap:wrap;
+  padding:20px; border-radius:10px; background:var(--surface-2); color:var(--ink-2);
+}
+.result.ok{background:var(--pass-soft); color:var(--pass)}
+.result.edge{background:var(--warn-soft); color:var(--warn)}
+.result.no{background:var(--fail-soft); color:var(--fail)}
+.ring{position:relative; width:124px; height:124px; flex:0 0 124px}
+.ring svg{width:100%; height:100%; transform:rotate(-90deg); display:block}
+.ringv{position:absolute; inset:0; display:grid; place-content:center; justify-items:center; gap:1px}
+.ringv b{font-size:32px; font-weight:700; letter-spacing:-.03em; line-height:1;
+  font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+.ringv span{font-size:10px; letter-spacing:.1em; text-transform:uppercase; opacity:.75}
+.rsay{flex:1 1 250px; display:grid; gap:7px; min-width:0}
+.rmark{font-size:27px; font-weight:700; letter-spacing:-.03em; line-height:1.1}
+.rwhy{font-size:14px; line-height:1.55; color:var(--ink); opacity:.88}
+.rsub{font-size:11.5px; opacity:.8; font-family:"IBM Plex Mono",monospace}
+
+/* ---------- 액션 랭킹 ---------- */
+.actlist{display:grid}
+.actrow{
+  display:grid; grid-template-columns:20px minmax(0,1fr) minmax(72px,120px) 78px;
+  gap:12px; align-items:center; padding:12px 18px; border-bottom:1px solid var(--line);
+}
+.actrow:last-child{border-bottom:0}
+.actrow.top{background:var(--accent-soft)}
+.actrow .rk{font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-3); text-align:right}
+.actrow.top .rk{color:var(--accent-ink); font-weight:600}
+.an{font-size:13.5px; font-weight:600; letter-spacing:-.01em; display:flex; gap:7px; align-items:center; flex-wrap:wrap}
+.ad{font-size:11.5px; color:var(--ink-3); margin-top:3px; line-height:1.45}
+.abar{height:6px; border-radius:99px; background:var(--surface-3); overflow:hidden; position:relative}
+.abar i{position:absolute; inset:0 auto 0 0; background:var(--accent); border-radius:99px}
+.ap{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;
+  font-size:17px; font-weight:600; color:var(--accent); letter-spacing:-.02em; white-space:nowrap}
+.ap small{font-size:10.5px; font-weight:400; color:var(--ink-3); margin-left:2px}
+.ap.zero{color:var(--ink-3)}
+.akind{font-size:10px; font-weight:600; letter-spacing:.02em; padding:2px 6px; border-radius:99px;
+  background:var(--surface-3); color:var(--ink-3)}
+.akind.gate{background:var(--fail-soft); color:var(--fail)}
+.akind.sup{background:var(--clay-soft); color:var(--clay)}
+.akind.clear{background:var(--pass-soft); color:var(--pass)}
+.actempty{padding:14px 18px; font-size:12.5px; color:var(--ink-3); line-height:1.6}
+.actrow+.actempty{border-top:1px solid var(--line); background:var(--surface-2)}
+@media(max-width:640px){
+  .actrow{grid-template-columns:18px minmax(0,1fr) 70px}
+  .actrow .abar{display:none}
+}
+
+/* ---------- 접히는 근거 ---------- */
+.dsec{border-bottom:1px solid var(--line)}
+.dsec:last-child{border-bottom:0}
+.dsec>summary{
+  cursor:pointer; list-style:none; padding:13px 18px; display:flex; align-items:center; gap:10px;
+  font-size:13px; font-weight:600; color:var(--ink-2);
+}
+.dsec>summary::-webkit-details-marker{display:none}
+.dsec>summary::before{content:"▸"; color:var(--ink-3); font-size:10px; width:9px}
+.dsec[open]>summary::before{content:"▾"}
+.dsec>summary:hover{color:var(--ink); background:var(--surface-2)}
+.dsec>summary .why{font-weight:400; font-size:11.5px; color:var(--ink-3); margin-left:auto; text-align:right}
+.dsec .dbody{padding:2px 18px 20px; display:grid; gap:16px}
+
+.subhead{font-size:12px; color:var(--ink-2); line-height:1.6; max-width:74ch}
+.subhead b{color:var(--ink)}
+</style>
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><b>스테이지 게이트</b><span>메이플키우기</span></div>
+    <div class="vtag mono"><i></i><span id="vtag">—</span></div>
+    <button class="tbtn" id="themeBtn" aria-label="테마 전환" title="테마 전환">◐</button>
+  </div>
+  <div class="tabbar"><div class="wrap">
+    <div class="tabs" id="tabs" role="tablist">
+      <button class="tab" data-tab="home"  role="tab" aria-selected="true">홈</button>
+      <button class="tab" data-tab="stage" role="tab" aria-selected="false">스테이지 분석</button>
+      <button class="tab" data-tab="sup"   role="tab" aria-selected="false">동료 도감</button>
+      <button class="tab" data-tab="mon"   role="tab" aria-selected="false">몬스터 도감</button>
+      <button class="tab" data-tab="enh"   role="tab" aria-selected="false">강화 · 유물</button>
+    </div>
+  </div></div>
+</header>
+
+<section class="panel" id="p-home" role="tabpanel">
+  <div class="hero3">
+    <div class="wrap heroin land">
+      <div class="askhead">
+        <h1 class="askq">메이플키우기 정보</h1>
+        <p class="asksub">캐릭터·스테이지·몬스터·동료를 찾아보고, 전투력 랭킹과 공식 소식을 한눈에.</p>
+      </div>
+      <div class="searchwrap">
+        <input class="searchbig" id="gq" type="search" autocomplete="off"
+               placeholder="🔍  캐릭터 · 스테이지 · 몬스터 · 동료 찾기">
+        <div class="qout" id="gqOut" hidden></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap landgrid">
+    <section class="rsec wide">
+      <div class="rhead"><h2>전투력 랭킹</h2><span class="rsub" id="rankSrc">TOP 3</span>
+        <button class="rmore" type="button" id="rankMore">전체 랭킹</button></div>
+      <div id="top3"></div>
+      <div id="liveRank" hidden></div>
+    </section>
+
+    <section class="rsec">
+      <div class="rhead"><h2>진행 중 이벤트</h2><span class="rsub" id="evSrc">공식 포럼</span></div>
+      <div id="homeEvents"></div>
+    </section>
+
+    <section class="rsec">
+      <div class="rhead"><h2>공지사항</h2><span class="rsub">공식 포럼</span></div>
+      <div id="homeNotices"></div>
+    </section>
+
+    <p class="datanote" id="statline" style="text-align:center"></p>
+  </div>
+</section>
+
+<section class="panel" id="p-stage" role="tabpanel" hidden>
+  <div class="hero3">
+    <div class="wrap heroin">
+      <div class="askhead">
+        <h1 class="askq">내 캐릭터, 어디까지 깰 수 있을까?</h1>
+        <p class="asksub">직업을 고르고 스탯을 넣으면, 어느 스테이지까지 깰 수 있는지 신호등으로 알려드려요.</p>
+      </div>
+
+      <div class="steprow"><span class="stepno">1</span><span class="steplabel">직업 고르기</span></div>
+      <div class="jobgrid big" id="heroJobs" role="radiogroup" aria-label="직업 선택"></div>
+
+      <div class="steprow"><span class="stepno">2</span><span class="steplabel">스탯 넣기</span>
+        <span class="stephint">게임 스탯창 값을 그대로 · 처음이면 예시로 먼저 보세요</span></div>
+      <div class="bigresult" id="bigResult"></div>
+
+      </div>
+      <p class="datanote" id="statline"></p>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="homegrid">
+      <section class="rsec wide" hidden>
+        <div class="rhead"><h2>내 진행</h2><span class="rsub" id="progHint">—</span></div>
+        <div id="progBody"></div>
+      </section>
+      <section class="rsec">
+        <div class="rhead"><h2>동료 티어</h2><span class="rsub" id="tierWhere">—</span>
+          <button class="rmore" type="button" data-go="sup">전체 보기</button></div>
+        <div id="tierList"></div>
+      </section>
+
+      <section class="rsec">
+        <div class="rhead"><h2>직업별 초당 피해</h2><span class="rsub">내 스탯 그대로</span></div>
+        <div id="jobRank"></div>
+      </section>
+
+      <section class="rsec wide">
+        <div class="rhead"><h2>가장 빡센 돌파</h2><span class="rsub">필요 초당 피해 기준</span>
+          <button class="rmore" type="button" data-go="stage">스테이지 분석</button></div>
+        <div id="hardList"></div>
+      </section>
+
+
+    </div>
+
+      <!-- ③ 내 캐릭터 -->
+      <section class="card">
+        <div class="card-h">
+          <div class="lbl">입력</div><h3>내 캐릭터</h3>
+          <button class="seg" type="button" id="fillTypical">예시 채우기</button>
+          <button class="seg" type="button" id="clearStats">비우기</button>
+        </div>
+        <div class="card-b" style="display:grid;gap:18px">
+          <div>
+            <div class="lbl" style="margin-bottom:9px">직업</div>
+            <div class="jobgrid" id="jobGrid" role="radiogroup" aria-label="직업"></div>
+          </div>
+          <div>
+            <div class="lbl" style="margin-bottom:9px">스탯 — 게임 스탯창 값을 그대로</div>
+            <div class="inputs" id="statInputs"></div>
+          </div>
+          <div>
+            <div class="lbl" style="margin-bottom:9px">동료 — 메인 1 + 서브 6</div>
+            <div class="supslots" id="supSlots"></div>
+            <div class="suppick">
+              <div class="pickhead">
+                <span class="lbl" id="pickWho">메인 동료</span>
+                <span class="cap" id="pickCap"></span>
+                <button class="seg" type="button" id="pickClear">비우기</button>
+              </div>
+              <div class="jobgrid" id="supGrid" role="radiogroup" aria-label="동료 직업"></div>
+              <div class="pickrow">
+                <div class="segs" id="gradeSegs"></div>
+                <div class="inp" style="flex:0 0 108px">
+                  <label for="supLv">레벨</label>
+                  <input id="supLv" type="number" min="1" max="300" step="1" value="1">
+                </div>
+              </div>
+            </div>
+            <p class="hint">메인만 소환돼서 직접 때립니다. 서브 6칸은 <b>장착 옵션만</b> 줍니다 —
+              그 옵션은 이미 스탯창 수치에 들어 있어서 중복으로 더하지 않고 기여분만 분해해 보여줍니다.</p>
+          </div>
+          <details class="more">
+            <summary>전투력 계산용 추가 입력 — 방어 · 생존 · 스킬 레벨 · 마스터리</summary>
+            <div class="inputs" id="cpInputs" style="margin-top:14px"></div>
+          </details>
+          <details class="more">
+            <summary>세팅 저장 — 무기 교체 전후 비교</summary>
+            <div style="margin-top:14px">
+              <div class="presetbar">
+                <input class="field" id="presetName" type="text" placeholder="세팅 이름" maxlength="24">
+                <button class="seg" type="button" id="presetSave">저장</button>
+                <span id="presetList" style="display:flex;gap:6px;flex-wrap:wrap"></span>
+              </div>
+              <p class="hint">스탯 · 직업 · 동료 · R 이 통째로 저장됩니다. 이 브라우저에만 남습니다.</p>
+            </div>
+          </details>
+          <details class="more">
+            <summary>로테이션 효율 R — 계산기를 내 계정에 맞추기</summary>
+            <div style="margin-top:14px;display:grid;gap:12px">
+              <p class="subhead">1타 피해는 공식으로 정확히 나오지만 <b>초당 몇 번 때리는지</b>는
+                후딜 · 타겟 재탐색 때문에 데이터만으로 확정되지 않습니다. 그 한 덩어리가 R 입니다.
+                기본값은 실계정 한 건(ch36 비숍)으로 맞춘 값이라 <b>절대 피해량보다 스테이지 간 상대 난이도</b>가
+                더 믿을 만합니다.</p>
+              <div class="gaterow">
+                <label class="lbl" for="rIn" style="text-transform:none;letter-spacing:0;font-size:12.5px">R</label>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <input type="range" id="rRange" min="0.5" max="8" step="0.05" value="2.80">
+                  <input class="inline-in" id="rIn" type="number" min="0.1" step="0.05" value="2.80" style="width:88px">
+                </div>
+              </div>
+              <div id="rHint" class="note ok" style="display:none"></div>
+            </div>
+          </details>
+        </div>
+      </section>
+  </div>
+
+  <div class="wrap">
+    <div class="mebar" id="meBar"></div>
+    <div class="app">
+    <aside class="rail">
+      <div class="rail-h">
+        <div>
+          <div class="lbl" style="margin-bottom:6px">스테이지</div>
+          <input class="field" id="q" type="search" placeholder="36-8, Zakum…" autocomplete="off">
+        </div>
+        <div class="segs" id="modeSegs">
+          <button class="seg" data-mode="돌파" aria-pressed="true">돌파</button>
+          <button class="seg" data-mode="챕터 보스" aria-pressed="false">챕터 보스</button>
+          <button class="seg" data-mode="사냥" aria-pressed="false">사냥</button>
+          <button class="seg" data-mode="*" aria-pressed="false">전체</button>
+        </div>
+        <select class="field" id="chSel" aria-label="챕터"></select>
+      </div>
+      <div class="rail-list" id="list" role="listbox" aria-label="스테이지 목록"></div>
+      <div class="rail-f"><span id="listCount">—</span></div>
+    </aside>
+
+    <main class="read">
+
+      <!-- ① 결과 -->
+      <section class="card">
+        <div class="stage-h">
+          <div style="flex:1 1 220px">
+            <h2 id="stId">—</h2>
+            <p class="stage-sub" id="stSub">왼쪽에서 스테이지를 고르세요</p>
+          </div>
+          <div class="segs" id="stFlags"></div>
+        </div>
+        <div class="card-b" style="display:grid;gap:16px">
+          <div class="result" id="verdict">
+            <div class="ring">
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <circle cx="60" cy="60" r="52" fill="none" stroke="currentColor" stroke-width="11" opacity=".16"/>
+                <circle id="ringArc" cx="60" cy="60" r="52" fill="none" stroke="currentColor" stroke-width="11"
+                        stroke-linecap="round" stroke-dasharray="0 326.7"/>
+              </svg>
+              <div class="ringv"><b id="probV">—</b><span>클리어 확률</span></div>
+            </div>
+            <div class="rsay">
+              <div class="rmark" id="rMark">스탯을 입력하세요</div>
+              <p class="rwhy" id="rWhy">아래에서 직업을 고르고 스탯창 값을 넣으면 이 스테이지를 깰 확률을 계산합니다.</p>
+              <p class="rsub" id="rSub"></p>
+            </div>
+          </div>
+          <div>
+            <div class="meter" id="meter"><i style="width:0"></i><b></b></div>
+            <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-3)">
+              <span id="meterL">—</span><span id="meterR">클리어선</span>
+            </div>
+          </div>
+          <div class="tiles" style="border:1px solid var(--line);border-radius:8px;overflow:hidden">
+            <div class="tile"><div class="lbl"><span class="dot ok"></span>총 몬스터 HP</div>
+              <div class="v" id="tHp">—</div><div class="sub" id="tHpSub">—</div></div>
+            <div class="tile"><div class="lbl"><span class="dot ok"></span>전투 가용 시간</div>
+              <div class="v" id="tTime">—</div><div class="sub" id="tTimeSub">보스 출구 도달까지</div></div>
+            <div class="tile acc"><div class="lbl"><span class="dot est"></span>내 초당 피해</div>
+              <div class="v" id="tDps">—</div><div class="sub" id="tDpsSub">—</div></div>
+            <div class="tile gate"><div class="lbl"><span class="dot ok"></span>최소 필요 명중</div>
+              <div class="v" id="tAcc">—</div><div class="sub" id="tAccSub">—</div></div>
+          </div>
+          <div class="notes" id="notes"></div>
+        </div>
+      </section>
+
+      <!-- ② 액션 -->
+      <section class="card">
+        <div class="card-h">
+          <div class="lbl">우선순위</div><h3>지금 뭘 바꾸면 되나</h3>
+          <span class="chip" id="actHint">—</span>
+        </div>
+        <div class="actlist" id="actList"></div>
+      </section>
+
+      <!-- ④ 근거 -->
+      <section class="card">
+        <div class="card-h">
+          <div class="lbl">근거</div><h3>계산 내역</h3>
+          <span class="chip ok"><span class="dot ok"></span>클라이언트 원본</span>
+        </div>
+
+        <details class="dsec">
+          <summary>명중과 방어 관통력 <span class="why">미스로 잃는 피해 · 방어력 배율</span></summary>
+          <div class="dbody">
+            <div class="grid2">
+              <div>
+                <div class="lbl" style="margin-bottom:8px">명중 — 미스 손실</div>
+                <svg class="chart" id="accChart" viewBox="0 0 320 132" preserveAspectRatio="none"></svg>
+                <div class="verdict" id="accVerdict"><span>—</span></div>
+                <p class="hint">대상 회피보다 명중이 낮으면 그 격차만큼 미스가 납니다. 초과분은 피해에 기여하지 않습니다.</p>
+              </div>
+              <div>
+                <div class="lbl" style="margin-bottom:8px">방어 관통력 — 피해 배율</div>
+                <svg class="chart" id="defChart" viewBox="0 0 320 132" preserveAspectRatio="none"></svg>
+                <div class="verdict" id="defVerdict"><span>—</span></div>
+                <p class="hint">피해 배율 = 5000 ÷ (관통 후 방어력 + 6000). 관통이 높을수록 증가폭이 줄어듭니다.</p>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="dsec">
+          <summary>동료가 얼마나 때리나 <span class="why">전용 스킬 · 계승률 · 장착 옵션</span></summary>
+          <div class="dbody">
+            <p class="subhead">동료는 소환되면 <b>자기 전용 스킬 세트</b>로 싸웁니다. 공격력만 플레이어에게서
+              계승하고(레벨에 따라 최대 90%) 나머지 공격 능력치는 플레이어 값을 그대로 씁니다.</p>
+            <div class="tiles" style="border:1px solid var(--line);border-radius:8px;overflow:hidden">
+              <div class="tile"><div class="lbl">공격력 계승률</div><div class="v" id="supInherit">—</div>
+                <div class="sub" id="supInhSub">레벨에 따라 상승 · 90% 상한</div></div>
+              <div class="tile acc"><div class="lbl">동료 초당 피해</div><div class="v" id="supDps">—</div>
+                <div class="sub" id="supShare">—</div></div>
+              <div class="tile"><div class="lbl">소환 지속</div><div class="v" id="supDur">—</div>
+                <div class="sub">쿨타임 90초</div></div>
+            </div>
+            <div class="tscroll">
+              <table><thead><tr>
+                <th>동료 스킬</th><th style="text-align:right">계수</th><th style="text-align:right">타격</th>
+                <th style="text-align:right">대상</th><th style="text-align:right">주기</th>
+                <th style="text-align:right">기여</th>
+              </tr></thead><tbody id="supBody"></tbody></table>
+            </div>
+            <div id="supBuffs" class="notes"></div>
+            <div id="subSum" class="notes"></div>
+            <p class="hint">서브 동료의 장착 옵션은 <b>이미 스탯창 수치에 들어 있습니다</b>. 여기서는 중복
+              적용하지 않고 기여분만 분해해 보여줍니다 — 어느 슬롯을 올릴지 비교용입니다.</p>
+          </div>
+        </details>
+
+        <details class="dsec">
+          <summary>동료 후보 비교 <span class="why">교체 · 레벨업 시 초당 피해</span></summary>
+          <div class="dbody">
+            <div>
+              <div class="lbl" style="margin-bottom:8px">메인 동료 교체 — 지금 세팅 기준 초당 피해</div>
+              <div class="tscroll">
+                <table><thead><tr>
+                  <th>동료</th><th>등급</th><th style="text-align:right">만렙</th>
+                  <th style="text-align:right">현재 레벨</th><th style="text-align:right">만렙 기준</th>
+                  <th style="text-align:right">현재 대비</th>
+                </tr></thead><tbody id="recMain"></tbody></table>
+              </div>
+              <p class="hint">동료 전용 스킬 + 패시브 버프를 모두 적용한 값입니다. 등급별 만렙이 다릅니다
+                (노말 100 · 레어 50 · 에픽 30 · 유니크 10 · 레전드리 16).</p>
+            </div>
+            <div>
+              <div class="lbl" style="margin-bottom:8px">동료 레벨 — 올리면 얼마나 오르나</div>
+              <div id="recLevel" class="notes"></div>
+            </div>
+          </div>
+        </details>
+
+        <details class="dsec">
+          <summary>능력치별 효과 원표 <span class="why">올릴 것 · 놀고 있는 것</span></summary>
+          <div class="dbody">
+            <div>
+              <div class="lbl" style="margin-bottom:8px">올릴 능력치</div>
+              <div class="tscroll">
+                <table><thead><tr>
+                  <th>능력치</th><th>단위</th><th style="text-align:right">여유 배수</th>
+                  <th style="text-align:right">클리어 확률</th><th style="text-align:right">전투력</th>
+                  <th style="text-align:right">이것만으로 돌파</th>
+                </tr></thead><tbody id="upList"></tbody></table>
+              </div>
+              <p class="hint"><b>여유 배수 ÷ 전투력</b> 순으로 보면 같은 전투력을 썼을 때 실제로 이득인 쪽이 보입니다.</p>
+            </div>
+            <div>
+              <div class="lbl" style="margin-bottom:8px">놀고 있는 능력치 — 지금 값을 전부 없앴을 때</div>
+              <div class="tscroll">
+                <table><thead><tr>
+                  <th>능력치</th><th>현재</th><th style="text-align:right">여유 배수 손실</th>
+                  <th style="text-align:right">전투력 손실</th><th>판정</th>
+                </tr></thead><tbody id="downList"></tbody></table>
+              </div>
+            </div>
+            <div id="swapNote" class="notes"></div>
+          </div>
+        </details>
+
+        <details class="dsec">
+          <summary>로테이션 <span class="why">무엇이 얼마나 때리는가</span></summary>
+          <div class="dbody">
+            <div class="tscroll">
+              <table><thead><tr>
+                <th>스킬</th><th>구분</th><th style="text-align:right">계수</th>
+                <th style="text-align:right">타격</th><th style="text-align:right">대상</th>
+                <th style="text-align:right">주기</th><th style="text-align:right">기여</th>
+              </tr></thead><tbody id="rotBody"></tbody></table>
+            </div>
+          </div>
+        </details>
+
+        <details class="dsec">
+          <summary>웨이브 구성 <span class="why">스폰 시각 · 이동속도 · 출구 도달</span></summary>
+          <div class="dbody">
+            <div class="tscroll">
+              <table><thead><tr>
+                <th style="text-align:right">스폰</th><th>몬스터</th><th style="text-align:right">마리</th>
+                <th style="text-align:right">개체 HP</th><th style="text-align:right">이동속도</th>
+                <th style="text-align:right">출구까지</th>
+              </tr></thead><tbody id="campBody"></tbody></table>
+            </div>
+            <p class="hint">돌파에는 화면 타이머가 없습니다. <b>몬스터가 출구에 닿으면 즉시 실패</b>하는 방어전입니다.
+              지금 모델은 <b>보스가 출구에 닿는 시각</b>만 제한으로 씁니다 — 일반 몬스터가 먼저 닿는 경우는
+              아직 반영되지 않았습니다.</p>
+          </div>
+        </details>
+
+        <details class="dsec">
+          <summary>전투력과 뻥투력 <span class="why">표시 전투력 중 실제로 때리는 몫</span></summary>
+          <div class="dbody">
+            <div class="tiles" style="border:1px solid var(--line);border-radius:8px;overflow:hidden">
+              <div class="tile"><div class="lbl">표시 전투력</div><div class="v" id="cpFull">—</div>
+                <div class="sub">공식 25개 항</div></div>
+              <div class="tile acc"><div class="lbl">유효 전투력</div><div class="v" id="cpEff">—</div>
+                <div class="sub">이 스테이지 피해 기여분</div></div>
+              <div class="tile gate"><div class="lbl">뻥투력 지수</div><div class="v" id="cpDead">—</div>
+                <div class="sub" id="cpDeadSub">—</div></div>
+            </div>
+            <div>
+              <div class="stack" id="cpStack"><i class="eff" style="width:100%"></i><i class="out" style="width:0"></i><i class="dead" style="width:0"></i></div>
+              <div class="legend">
+                <span><b class="eff"></b>피해에 기여</span>
+                <span><b class="out"></b>모델 측정 밖</span>
+                <span><b class="dead"></b>이 스테이지에서 무효</span>
+              </div>
+            </div>
+            <div><div class="lbl" style="margin-bottom:8px">무효 전투력 내역</div><div id="deadList"></div></div>
+          </div>
+        </details>
+
+        <details class="dsec">
+          <summary>무엇을 검증했고 무엇이 보정인가 <span class="why">출처 구분</span></summary>
+          <div class="dbody">
+            <div class="cards3">
+              <div class="mini"><h4>전투력 계산식 — 검증</h4>
+                <p>공식 25개 항으로 실계정 <code>2경 4021조</code>를 재현했습니다. 차이 0.02% 이내.</p></div>
+              <div class="mini"><h4>1타 피해식 — 검증</h4>
+                <p>실제 화면 피해 <code>200조~900조</code>, 모델 예측 190조~985조로 범위가 겹칩니다.</p></div>
+              <div class="mini"><h4>스테이지 데이터 — 검증</h4>
+                <p><code>CreatureStatTable × MonsterTierTable ÷ 1000</code>으로 조립. 방어력·회피 포함.</p></div>
+              <div class="mini"><h4>스폰 타이밍 — 확정</h4>
+                <p>맵 정의 <code>Camps[].InitTimeMs</code> 그대로. 캠프 20개가 1초 간격으로 나옵니다.</p></div>
+              <div class="mini"><h4>돌파의 구조 — 확정</h4>
+                <p>화면 타이머 없음. 몬스터가 출구에 닿으면 즉시 실패하는 방어전입니다.</p></div>
+              <div class="mini"><h4>로테이션 효율 R — 보정</h4>
+                <p>초당 타격 횟수만 실계정 1건으로 맞춘 값입니다. 이 항목만 추정입니다.</p></div>
+            </div>
+          </div>
+        </details>
+      </section>
+
+    </main>
+  </div>
+  </div>
+</section>
+
+<section class="panel" id="p-sup" role="tabpanel" hidden>
+  <div class="wrap"><div class="pad">
+    <section class="card">
+      <div class="card-h"><div class="lbl">도감</div><h3>동료</h3>
+        <span class="chip" id="supDexHint">—</span></div>
+      <div class="dexbar">
+        <input class="field" id="supDexQ" type="search" placeholder="동료 이름" autocomplete="off">
+        <div class="segs" id="supDexGrade"></div>
+        <div class="segs" id="supDexSort"></div>
+      </div>
+      <div id="supDex"></div>
+    </section>
+    <p class="hint">초당 피해는 <b>지금 홈에 넣은 스탯 + 선택된 스테이지</b> 기준으로 이 계산기가
+      직접 돌린 값입니다. 게임이 알려주는 수치가 아닙니다. 스킬 계수 · 버프 · 옵션 · 만렙은
+      클라이언트 원본 테이블 값입니다.</p>
+  </div></div>
+</section>
+
+<section class="panel" id="p-mon" role="tabpanel" hidden>
+  <div class="wrap"><div class="pad">
+    <section class="card">
+      <div class="card-h"><div class="lbl">도감</div><h3>몬스터</h3>
+        <span class="chip" id="monHint">—</span></div>
+      <div class="dexbar">
+        <input class="field" id="monQ" type="search" placeholder="몬스터 이름 (영문)" autocomplete="off">
+        <div class="segs" id="monKind">
+          <button class="seg" data-k="*" aria-pressed="true">전체</button>
+          <button class="seg" data-k="boss" aria-pressed="false">보스</button>
+          <button class="seg" data-k="norm" aria-pressed="false">일반</button>
+        </div>
+        <select class="field" id="monCh" aria-label="챕터" style="width:auto"></select>
+        <div class="segs" id="monSort">
+          <button class="seg" data-s="ch" aria-pressed="true">챕터순</button>
+          <button class="seg" data-s="hp" aria-pressed="false">HP순</button>
+          <button class="seg" data-s="n" aria-pressed="false">이름순</button>
+        </div>
+      </div>
+      <div class="tscroll">
+        <table><thead><tr>
+          <th>몬스터</th><th style="text-align:right">최대 HP</th>
+          <th style="text-align:right">방어력</th><th style="text-align:right">회피</th>
+          <th style="text-align:right">이동속도</th><th style="text-align:right">등장</th>
+        </tr></thead><tbody id="monBody"></tbody></table>
+      </div>
+      <div class="rail-f"><span id="monCount">—</span></div>
+    </section>
+    <p class="hint">HP · 방어력 · 회피는 같은 몬스터라도 스테이지 티어에 따라 달라져서
+      <b>최소~최대 구간</b>으로 적었습니다. 수치는 클라이언트 원본
+      (<code>CreatureStatTable × MonsterTierTable ÷ 1000</code>)이지만
+      <b>이름은 커뮤니티 파생본</b>에서 온 영문명입니다 — 클라이언트의 한글 이름은 암호화돼 있어
+      쓰지 않았습니다. 초상화가 없는 64종은 게임이 공용 보스 아이콘을 쓰는 몬스터들입니다.</p>
+  </div></div>
+</section>
+
+<section class="panel" id="p-enh" role="tabpanel" hidden>
+  <div class="wrap"><div class="pad">
+    <div class="grid2">
+      <section class="card">
+        <div class="card-h"><div class="lbl">계산기</div><h3>스타포스</h3>
+          <span class="chip ok"><span class="dot ok"></span>원본 확률</span></div>
+        <div class="card-b" style="display:grid;gap:14px">
+          <div class="pickrow">
+            <div class="inp" style="flex:0 0 104px"><label for="sfFrom">현재 ★</label>
+              <input id="sfFrom" type="number" min="0" step="1" value="17"></div>
+            <div class="inp" style="flex:0 0 104px"><label for="sfTo">목표 ★</label>
+              <input id="sfTo" type="number" min="1" step="1" value="20"></div>
+          </div>
+          <div id="sfOut"></div>
+        </div>
+        <div class="tscroll" style="max-height:340px;overflow-y:auto">
+          <table><thead><tr>
+            <th style="text-align:right">단계</th><th style="text-align:right">주스탯</th>
+            <th style="text-align:right">부스탯</th><th style="text-align:right">성공</th>
+            <th style="text-align:right">하락</th><th style="text-align:right">파괴</th>
+            <th style="text-align:right">기대 주문서</th>
+          </tr></thead><tbody id="recStar"></tbody></table>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-h"><div class="lbl">계산기</div><h3>큐브</h3>
+          <span class="chip ok"><span class="dot ok"></span>원본 확률</span></div>
+        <div class="card-b" style="display:grid;gap:14px">
+          <div class="pickrow">
+            <div style="flex:1 1 160px">
+              <label class="slabel" for="cbFrom">현재 등급</label>
+              <select class="field" id="cbFrom"></select>
+            </div>
+            <div style="flex:1 1 160px">
+              <label class="slabel" for="cbTo">목표 등급</label>
+              <select class="field" id="cbTo"></select>
+            </div>
+          </div>
+          <div id="cbOut"></div>
+        </div>
+        <div class="tscroll" style="max-height:340px;overflow-y:auto">
+          <table><thead><tr>
+            <th>부위</th><th>등급 상승</th><th style="text-align:right">확률</th>
+            <th style="text-align:right">천장</th><th style="text-align:right">기대 큐브</th>
+          </tr></thead><tbody id="recCube"></tbody></table>
+        </div>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="card-h"><div class="lbl">도감</div><h3>유물</h3>
+        <span class="chip est"><span class="dot est"></span>이름 없음</span></div>
+      <div class="card-b">
+        <p class="subhead">유물 이름은 클라이언트 Localization 테이블에 암호화돼 있어 넣지 못했습니다.
+          <b>아이콘과 등급 · 수집 옵션 수치</b>만 원본 그대로 싣습니다 — 아이콘으로 알아보실 수 있습니다.</p>
+      </div>
+      <div class="artgrid" id="artDex"></div>
+      <div class="card-b" style="border-top:1px solid var(--line)">
+        <div id="artNote" class="notes"></div>
+      </div>
+    </section>
+  </div></div>
+</section>
+
+<footer class="foot">
+  <div class="wrap">
+    <p><b>데이터 출처</b> — 비공식 클라이언트 추출 데이터. 넥슨 공식 자료가 아니며 넥슨과 무관합니다.
+      실제 게임 결과와 차이가 있을 수 있습니다.</p>
+    <p id="footMeta" class="mono">—</p>
+  </div>
+</footer>
+
+
+<script>
+const DATA = /*__DATA__*/null/*__ENDDATA__*/;
+const ICONS = /*__ICONS__*/{}/*__ENDICONS__*/;
+const SUPICONS = /*__SUPICONS__*/{}/*__ENDSUPICONS__*/;
+const DEX = /*__DEX__*/{monsters:[],artifacts:[],artUpgrade:[],artPower:[]}/*__ENDDEX__*/;
+const DEXICONS = /*__DEXICONS__*/{mon:{},art:{}}/*__ENDDEXICONS__*/;
+let NOTICES={notices:[],events:[]};
+(function(){
+"use strict";
+const $=(s,r)=>(r||document).querySelector(s);
+const $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* ---------- 표기 ---------- */
+const UNITS=[[1e24,"자"],[1e20,"해"],[1e16,"경"],[1e12,"조"],[1e8,"억"],[1e4,"만"]];
+function fmt(n){
+  if(n==null||!isFinite(n)) return "—";
+  if(n===0) return "0";
+  const a=Math.abs(n);
+  for(const [u,s] of UNITS) if(a>=u){const v=n/u; return (v>=100?v.toFixed(0):v>=10?v.toFixed(1):v.toFixed(2))+s;}
+  if(a>=1000) return Math.round(n).toLocaleString("ko-KR");
+  return a>=100?n.toFixed(0):a>=1?n.toFixed(2):n.toPrecision(3);
+}
+const pct=(v,d)=>v==null?"—":v.toFixed(d==null?1:d)+"%";
+const int=v=>v==null?"—":Math.round(v).toLocaleString("ko-KR");
+function josa(w,a,b){const c=w.charCodeAt(w.length-1);
+  return w+(((c>=0xAC00&&c<=0xD7A3)?((c-0xAC00)%28)!==0:false)?a:b);}
+
+/* ---------- 전투 모델 ---------- */
+const GAP=new Map(DATA.gap.map(r=>[r[0],r[1]]));
+function evadePct(g){
+  if(g<=0)return 0; if(g>=100)return 70;
+  const lo=Math.floor(g),hi=Math.ceil(g);
+  const a=lo===0?0:(GAP.get(lo)||0),b=GAP.get(hi)||0;
+  return lo===hi?a:a+(b-a)*(g-lo);
+}
+const LVF=DATA.levelFactor, FA=DATA.meta.finalAttack;
+const MAXLV=Math.max.apply(null,Object.keys(LVF).map(Number));
+function dpOf(sk,lv){
+  const L=clamp(Math.round(1+(lv[sk.step]||0)+(lv.all||0)),1,MAXLV);
+  const f=LVF[L]?Number(LVF[L][sk.col]):1000;
+  return sk.dp*(f||1000)/1000;
+}
+function perHit(S,st,kind,boss){
+  const p=clamp(S.pierce,0,100);
+  const dm=5000/(st.df*(1-p/100)+6000);
+  const crit=1+clamp(S.crit,0,100)/100*(S.critd/100);
+  const rng=(S.dmin>S.dmax?S.dmax:(S.dmin+S.dmax)/2)/100;
+  const tgt=1+(boss?S.boss:S.norm)/100;
+  const km=1+(kind==="skill"?S.skill:S.basic)/100;
+  const hit=1-evadePct(Math.max(st.ev-S.acc,0))/100;
+  return S.atk*FA*dm*(1+S.dmg/100)*(1+S.amp/100)*(1+S.statp/100)
+         *tgt*km*crit*rng*(1+S.fin/100)*hit;
+}
+function availableS(st){
+  if(!st.camps||!st.camps.length) return st.tl?st.tl/1000:60;
+  const ex=st.exitMm||21500; let bt=0,bs=1000,any=false;
+  st.camps.forEach(c=>c[1].forEach(m=>{ if(m[3]){bt=Math.max(bt,c[0]);bs=m[4];any=true;} }));
+  if(!any){ const last=st.camps[st.camps.length-1]; bt=last[0]; bs=last[1][0]?last[1][0][4]:1000; }
+  return (bt+ex/bs*1000)/1000;
+}
+function rotation(job,st,S,lv,boss){
+  const cap=Math.max(1,Math.min(st.spawn||1,12));
+  const bs=job.skills.filter(x=>x.b);
+  let basic=null,best=-1;
+  bs.forEach(x=>{const v=dpOf(x,lv)*(x.hc||1); if(v>best){best=v;basic=x;}});
+  const hB=perHit(S,st,"basic",boss),hS=perHit(S,st,"skill",boss);
+  const rows=[];
+  job.skills.filter(x=>!x.b&&x.cd>0).forEach(x=>{
+    const eff=Math.max(x.cd-S.cdsec*1000,4000);
+    const n=boss?1:Math.min(x.tg||1,cap);
+    rows.push({n:x.n,kind:"쿨기",dp:dpOf(x,lv),hc:x.hc||1,tg:n,cyc:eff/1000,
+               dps:hS*(dpOf(x,lv)/100)*(x.hc||1)*n/(eff/1000)});
+  });
+  if(basic){
+    const cyc=(basic.du||1000)/(1+S.aspd/100)/1000;
+    const n=boss?1:Math.min((basic.tg||1)+S.btgt,cap);
+    rows.push({n:basic.n,kind:"기본공격",dp:dpOf(basic,lv),hc:basic.hc||1,tg:n,cyc:cyc,
+               dps:hB*(dpOf(basic,lv)/100)*(basic.hc||1)*n/cyc});
+  }
+  rows.sort((a,b)=>b.dps-a.dps);
+  return rows;
+}
+function dps(job,st,S,lv,R,boss,sup,supLv){
+  const V = sup ? applySupBuffs(S,sup,supLv) : S;
+  const own = rotation(job,st,V,lv,boss).reduce((a,r)=>a+r.dps,0)*R*V.extra;
+  const mate = sup ? supDps(sup,st,V,supLv) : 0;   // 동료는 R 보정 밖 — 자기 스킬로 싸운다
+  return own + mate;
+}
+/* 스테이지 HP 를 일반/보스로 쪼갠다. 캠프 항목 = [이름, 마리수, 개체HP, 보스여부, 이동속도] */
+function hpSplit(st){
+  let b=0,n=0;
+  (st.camps||[]).forEach(c=>c[1].forEach(m=>{
+    const h=(m[1]||1)*(m[2]||0); if(m[3]) b+=h; else n+=h;
+  }));
+  return {b:b, n:n, t:b+n};
+}
+/* 여유 배수 = 쓸 수 있는 시간 ÷ 실제로 걸리는 시간.
+   일반 구간과 보스 구간은 적용되는 데미지 항이 다르므로 시간을 따로 재서 더한다. */
+function clearRatio(job,st,S,lv,R,sup,supLv){
+  if(!st.hp) return 0;
+  const T=availableS(st), sp=hpSplit(st);
+  const dn=dps(job,st,S,lv,R,false,sup,supLv);
+  if(!(sp.t>0)) return dn>0? dn*T/st.hp : 0;
+  const db=dps(job,st,S,lv,R,true,sup,supLv);
+  if(!(dn>0)||!(db>0)) return 0;
+  return T/(sp.n/dn+sp.b/db);
+}
+/* 한 타격 배율의 평균/분산 (닫힌 형태).
+   v = B·C·U,  B~미스판정{0,1}, C~크리{1, 1+critd/100}, U~Uniform(dmin,dmax)/100 — 서로 독립. */
+function hitMoments(S,st){
+  const pc=clamp(S.crit,0,100)/100, miss=evadePct(Math.max(st.ev-S.acc,0))/100;
+  const mn=Math.min(S.dmin,S.dmax)/100, mx=Math.max(S.dmin,S.dmax)/100;
+  const c=1+S.critd/100;
+  const eB=1-miss,        e2B=1-miss;                    // B∈{0,1} ⇒ E[B²]=E[B]
+  const eC=1+pc*(c-1),    e2C=(1-pc)+pc*c*c;
+  const eU=(mn+mx)/2,     e2U=(mn*mn+mn*mx+mx*mx)/3;
+  const mean=eB*eC*eU, m2=e2B*e2C*e2U;
+  return {mean, varr:Math.max(m2-mean*mean,0)};
+}
+/* 표준정규 누적분포 (Abramowitz–Stegun 26.2.17, 오차 <7.5e-8) */
+function normCdf(z){
+  const s=z<0?-1:1; z=Math.abs(z)/Math.SQRT2;
+  const t=1/(1+0.3275911*z);
+  const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-z*z);
+  return 0.5*(1+s*y);
+}
+/* 클리어 확률 — 피해량을 ratio·(1+sd·Z), Z~N(0,1) 로 보고 P(ratio·(1+sd·Z) ≥ 1).
+   sd = 타격 분산이 만드는 흔들림 + 모델 자체 불확실성(로테이션 효율 등) 하한. */
+const MODEL_SD=0.06;
+function clearSd(job,st,S,lv){
+  const rows=rotation(job,st,S,lv,false);
+  const T=availableS(st);
+  const nHit=Math.max(30,Math.round(rows.reduce((a,r)=>a+r.hc*r.tg/r.cyc,0)*T));
+  const m=hitMoments(S,st);
+  const rel=m.mean>0? Math.sqrt(m.varr/nHit)/m.mean : 0;
+  return Math.sqrt(rel*rel+MODEL_SD*MODEL_SD);
+}
+function clearProb(job,st,S,lv,R,n,sup,supLv){
+  const V = sup ? applySupBuffs(S,sup,supLv) : S;
+  const ratio=clearRatio(job,st,S,lv,R,sup,supLv);
+  if(!(ratio>0)) return {p:0,ratio:0,band:[0,0],sd:0};
+  const sd=clearSd(job,st,V,lv);
+  const p=normCdf((1-1/ratio)/sd);
+  const z=1.2815515655446004;                       // 10% / 90% 분위
+  return {p, ratio, band:[ratio*(1-sd*z), ratio*(1+sd*z)], sd};
+}
+/* ---------- 공식 전투력 ---------- */
+const MAIN_G=[5,6,9,9], SUB_G=[2,4,6,10];
+function combatPower(v){
+  const P=x=>(x||0)*10, R=x=>(x||0);
+  let f=R(v.atk)*3+R(v.hp)*0.05+R(v.def)*0.2;
+  f*=1+(R(v.hp)+R(v.def)*20+(R(v.mp)-500)*10)/1e6;
+  f*=1+P(v.dmg)*700/1e6; f*=1+P(v.aspd)*700/1e6;
+  f*=1+(P(v.crit)*350+(P(v.critd)-300)*550)/1e6;
+  f*=1+((P(v.dmax)-1000)*350+(P(v.dmin)-650)*350)/1e6;
+  f*=1+(R(v.acc)*4500+R(v.eva)*1000)/1e6;
+  f*=1+(P(v.norm)*350+P(v.boss)*350)/1e6;
+  f*=1+P(v.ail)*350/1e6;
+  f*=1+(P(v.skill)*200+P(v.basic)*500)/1e6;
+  f*=1+P(v.pierce)*1000/1e6;
+  f*=1+(R(v.sk1)*500+R(v.sk2)*1000+R(v.sk3)*2500+R(v.sk4)*3500+R(v.skAll)*6000)/1e6;
+  f*=1+P(v.buffdur)*250/1e6; f*=1+P(v.petdur)*250/1e6;
+  f*=1+(R(v.cdsec)*25+P(v.cdpct)*250)/1e6;
+  f*=1+R(v.btgt)*30000/1e6; f*=1+P(v.dtaken)*200/1e6;
+  f*=1+P(v.statp)*700/1e6; f*=1+P(v.fin)*700/1e6; f*=1+P(v.amp)*700/1e6;
+  let m=R(v.mainM); MAIN_G.forEach(n=>{const t=clamp(m,0,n);m-=t;f*=1+t*80000/1e6;});
+  let s=R(v.subM);  SUB_G.forEach(n=>{const t=clamp(s,0,n);s-=t;f*=1+t*25000/1e6;});
+  return f;
+}
+
+/* ---------- 동료 ---------- */
+const SLF=DATA.supLevelFactor;
+const SUPMAX=Math.max.apply(null,Object.keys(SLF).map(Number));
+function inheritRate(sup,lv){
+  const L=clamp(Math.round(lv||1),1,SUPMAX);
+  return SLF[L]? Number(SLF[L][sup.inheritCol])/1000 : 0.25;
+}
+/* 동료 스킬 하나의 초당 피해. 공격력만 계승률로 낮추고 나머지 능력치는 플레이어 값. */
+function supRows(sup, st, S, lv){
+  if(!sup) return [];
+  const inh=inheritRate(sup,lv);
+  const cap=Math.max(1,Math.min(st.spawn||1,12));
+  const hS=perHit(S,st,"skill",false)*inh;
+  return sup.skills.filter(x=>(x.op||1)<=lv).map(x=>{
+    const cyc = x.cd? Math.max(x.cd,1000)/1000 : (x.du||1000)/1000;
+    const tg  = Math.min(x.tg||1,cap);
+    return {n:x.n, dp:x.dp, hc:x.hc||1, tg:tg, cyc:cyc,
+            dps:hS*(x.dp/100)*(x.hc||1)*tg/cyc};
+  }).sort((a,b)=>b.dps-a.dps);
+}
+function supDps(sup, st, S, lv){
+  return supRows(sup,st,S,lv).reduce((a,r)=>a+r.dps,0);
+}
+/* 동료 버프를 플레이어 스탯에 얹는다. ModStatR 은 배율(%), ModStat 은 수치(%p). */
+function applySupBuffs(V, sup, lv){
+  if(!sup||!sup.buffs) return V;
+  const L=lv==null? (S.supLv||1) : lv;
+  const o=Object.assign({},V);
+  const MAP={Attack:"atk", AttackPower:"atk", FinalDamage:"fin", CriticalPower:"critd",
+             CriticalChance:"crit", AttackSpeed:"aspd", MaxDamageRatio:"dmax",
+             MinDamageRatio:"dmin", SkillPower:"skill", BaseAttackPower:"basic",
+             AttackPowerToBoss:"boss", AttackPowerExcludeBoss:"norm"};
+  sup.buffs.forEach(b=>{
+    if((b.op||1)>L) return;                 // 아직 해금되지 않은 패시브
+    const k=MAP[b.stat]; if(!k) return;
+    if(k==="atk") o.atk = o.atk*(1+b.val/100);
+    else o[k]=(o[k]||0)+b.val;
+  });
+  return o;
+}
+
+/* 동료 옵션 값. Factor 가 SupporterLevelStatFactorTable 컬럼을 가리킨다. */
+const OPT_PCT=new Set(["AttackPower","MaxHpR","MainStatR","SkillPower","BaseAttackPower",
+  "AttackPowerToBoss","AttackPowerExcludeBoss","CriticalChance","CriticalPower",
+  "MaxDamageRatio","MinDamageRatio","AttackSpeed","AttackPowerInCc"]);
+const OPT_KO={Attack:"공격력(고정)",AttackPower:"공격력",MaxHp:"최대 HP(고정)",MaxHpR:"최대 HP",
+  MainStat:"주스탯(고정)",MainStatR:"주스탯",SkillPower:"스킬 데미지",BaseAttackPower:"기본 공격 데미지",
+  AttackPowerToBoss:"보스 데미지",AttackPowerExcludeBoss:"일반 몬스터 데미지",
+  CriticalChance:"크리티컬 확률",CriticalPower:"크리티컬 데미지",MaxDamageRatio:"최대 데미지 배율",
+  MinDamageRatio:"최소 데미지 배율",AttackSpeed:"공격 속도",HitChance:"명중",
+  AttackPowerInCc:"상태이상 대상 데미지"};
+function optValue(o, lv){
+  const L=clamp(Math.round(lv||1),1,SUPMAX);
+  const f=o.factor? Number((SLF[L]||SLF[1])[o.factor])/1000 : 1;
+  const v=(o.val||0)*f;
+  return OPT_PCT.has(o.stat)? v/10 : v;     // % 계열은 1000분율
+}
+
+/* ---------- 상태 ---------- */
+const NAMES=DATA.names;
+const S={
+  mode:"돌파", ch:"ch:36", q:"", stage:null, job:"bishop", R:DATA.meta.defaultR, extra:1.0,
+  st:{atk:0,crit:0,critd:30,dmg:0,amp:0,statp:0,boss:0,norm:0,skill:0,basic:0,fin:0,dmin:65,dmax:100},
+  cp:{hp:0,mp:500,def:0,eva:0,dtaken:0,aspd:0,ail:0,cdpct:0,cdsec:0,buffdur:0,petdur:0,
+      btgt:0,sk1:0,sk2:0,sk3:0,sk4:0,skAll:0,mainM:0,subM:0},
+  acc:0, pierce:0, sup:"", supLv:1,
+  subs:[{c:"",l:1},{c:"",l:1},{c:"",l:1},{c:"",l:1},{c:"",l:1},{c:"",l:1}],
+};
+const curSup=()=>DATA.supporters.find(x=>x.code===S.sup)||null;
+const vec =()=>Object.assign({},S.st,{acc:S.acc,pierce:S.pierce,aspd:S.cp.aspd,
+      cdsec:S.cp.cdsec,btgt:S.cp.btgt,extra:S.extra});
+const lvOf=()=>({1:S.cp.sk1,2:S.cp.sk2,3:S.cp.sk3,4:S.cp.sk4,all:S.cp.skAll});
+const curJob=()=>DATA.jobs.find(j=>j.id===S.job)||DATA.jobs[0];
+const cpVec=()=>Object.assign({},S.st,S.cp,{acc:S.acc,pierce:S.pierce});
+
+/* ---------- 테마 ---------- */
+(function(){
+  let sv=null; try{sv=localStorage.getItem("sg-theme");}catch(e){}
+  if(sv) document.documentElement.setAttribute("data-theme",sv);
+  $("#themeBtn").addEventListener("click",()=>{
+    const cur=document.documentElement.getAttribute("data-theme");
+    const sysLight=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches;
+    const eff=cur||(sysLight?"light":"dark");     // 기본이 다크다
+    const nx=eff==="dark"?"light":"dark";
+    document.documentElement.setAttribute("data-theme",nx);
+    try{localStorage.setItem("sg-theme",nx);}catch(e){}
+    draw();
+  });
+})();
+$("#vtag").textContent="v"+DATA.meta.appVersion+" · 클라이언트 원본";
+$("#footMeta").textContent="appVersion "+DATA.meta.appVersion+" · 스테이지 "
+  +DATA.meta.stages.toLocaleString("ko-KR")+"개 · 직업 "+DATA.meta.jobs
+  +"개 · 최종공격력 배율 "+DATA.meta.finalAttack+" · 기본 R "+DATA.meta.defaultR;
+
+/* ---------- 목록 ---------- */
+(function(){
+  const sel=$("#chSel"), chs=new Set();
+  DATA.stages.forEach(s=>chs.add(s.ch));
+  const all=document.createElement("option"); all.value="all"; all.textContent="전체"; sel.appendChild(all);
+  Array.from(chs).sort((a,b)=>a-b).forEach(c=>{
+    const o=document.createElement("option"); o.value="ch:"+c; o.textContent="챕터 "+c; sel.appendChild(o);
+  });
+  sel.value=S.ch;
+})();
+function matches(s){
+  if(S.mode!=="*"&&s.mode!==S.mode) return false;
+  if(S.ch!=="all"&&String(s.ch)!==S.ch.slice(3)) return false;
+  if(S.q){
+    const q=S.q.toLowerCase();
+    if(s.id.toLowerCase().includes(q)) return true;
+    if(s.mode.includes(S.q)) return true;
+    return (s.camps||[]).some(c=>c[1].some(m=>(NAMES[m[0]]||"").toLowerCase().includes(q)));
+  }
+  return true;
+}
+const CAP=400;
+function renderList(){
+  const hits=DATA.stages.filter(matches).sort((a,b)=>a.ch-b.ch||a.dg-b.dg);
+  const box=$("#list"); box.textContent="";
+  const frag=document.createDocumentFragment();
+  hits.slice(0,CAP).forEach(s=>{
+    const b=document.createElement("button");
+    b.className="sitem"; b.type="button"; b.setAttribute("role","option");
+    b.setAttribute("aria-current",S.stage&&S.stage.id===s.id&&S.stage.mode===s.mode?"true":"false");
+    b.innerHTML='<span class="sid"></span><span class="mtag"></span><span class="smeta"><span></span><span></span></span>';
+    b.querySelector(".sid").textContent=s.id;
+    const tg=b.querySelector(".mtag"); tg.textContent=s.mode;
+    if(s.mode==="돌파"||s.mode==="챕터 보스") tg.className="mtag rush";
+    const ms=b.querySelectorAll(".smeta span");
+    ms[0].textContent="HP "+fmt(s.hp);
+    ms[1].textContent=s.camps&&s.camps.length?("캠프 "+s.nCamp):"—";
+    b.addEventListener("click",()=>select(s));
+    frag.appendChild(b);
+  });
+  box.appendChild(frag);
+  $("#listCount").textContent=hits.length>CAP
+    ? hits.length.toLocaleString("ko-KR")+"개 중 "+CAP+"개 — 검색으로 좁히세요"
+    : hits.length.toLocaleString("ko-KR")+"개";
+  if(hits.length&&(!S.stage||!matches(S.stage))) select(hits[0]);
+}
+function select(s){
+  S.stage=s;
+  $$(".sitem").forEach(b=>b.setAttribute("aria-current",
+    b.querySelector(".sid").textContent===s.id&&b.querySelector(".mtag").textContent===s.mode?"true":"false"));
+  $("#stId").textContent=s.id;
+  $("#stSub").textContent=[s.mode+" 모드", s.map, s.ct?("조건: "+s.ct):null]
+    .filter(Boolean).join("  ·  ");
+  const fb=$("#stFlags"); fb.textContent="";
+  const FK={RushMode:"돌파",NoUserDie:"사망 불가",CannotUsePassive:"패시브 불가",NoSupporter:"동료 불가",
+            NoBattlePotion:"물약 불가",IsCampaignBoss:"챕터 보스",AutoCompleted:"자동 완료",
+            ExitToRetry:"재도전",CannotRepeat:"반복 불가",UseMinimap:"미니맵"};
+  (s.flags||[]).forEach(f=>{const e=document.createElement("span");e.className="chip";
+    e.textContent=FK[f]||f; fb.appendChild(e);});
+  recompute();
+}
+
+/* ---------- 입력 구성 ---------- */
+const STAT_F=[["atk","공격력",0],["crit","크리티컬 확률 %",0],["critd","크리티컬 데미지 %",30],
+  ["dmg","데미지 %",0],["amp","데미지 증폭 %",0],["statp","스탯 비례 데미지 %",0],
+  ["boss","보스 몬스터 데미지 %",0],["norm","일반 몬스터 데미지 %",0],
+  ["skill","스킬 데미지 %",0],["basic","기본 공격 데미지 %",0],
+  ["fin","최종 데미지 %",0],["dmin","최소 데미지 배율 %",65],["dmax","최대 데미지 배율 %",100]];
+const CP_F=[["hp","최대 HP",0],["mp","최대 MP",500],["def","방어력",0],["eva","회피",0],
+  ["dtaken","받는 피해 감소 %",0],["aspd","공격 속도 %",0],["ail","상태이상 데미지 %",0],
+  ["cdpct","쿨타임 감소 %",0],["cdsec","쿨타임 감소 (초)",0],
+  ["buffdur","버프 지속시간 %",0],["petdur","동료 소환 지속시간 %",0],
+  ["btgt","기본 공격 대상 수 증가",0],
+  ["sk1","1차 스킬 레벨",0],["sk2","2차 스킬 레벨",0],["sk3","3차 스킬 레벨",0],
+  ["sk4","4차 스킬 레벨",0],["skAll","모든 스킬 레벨",0],
+  ["mainM","메인 마스터리 습득 수",0],["subM","서브 마스터리 습득 수",0]];
+function mkInputs(box,fields,store,prefix){
+  fields.forEach(([k,ko,d])=>{
+    const w=document.createElement("div"); w.className="inp"; const id=prefix+k;
+    w.innerHTML='<label for="'+id+'"></label><input id="'+id+'" type="number" step="any" inputmode="decimal">';
+    w.querySelector("label").textContent=ko;
+    const i=w.querySelector("input"); i.value=d; store[k]=d;
+    i.addEventListener("input",()=>{const v=parseFloat(i.value); store[k]=isFinite(v)?v:0; recompute();});
+    box.appendChild(w);
+  });
+}
+mkInputs($("#statInputs"),STAT_F,S.st,"in-");
+mkInputs($("#cpInputs"),CP_F,S.cp,"cp-");
+(function(){
+  const n=document.createElement("p");
+  n.style.cssText="grid-column:1/-1;font-size:11.5px;color:var(--ink-3);line-height:1.55;margin-top:2px";
+  n.innerHTML="스탯 비례 데미지는 스탯창에 뜬 값을 그대로 넣으세요 — "
+    +"주스탯 1% + 부스탯 0.25% 로 직접 환산하지 마십시오.";
+  $("#statInputs").appendChild(n);
+  const g=document.createElement("div");
+  g.className="inputs"; g.style.gridColumn="1/-1";
+  g.innerHTML='<div class="inp"><label for="in-acc">명중</label><input id="in-acc" type="number" step="any"></div>'
+             +'<div class="inp"><label for="in-pierce">방어 관통력 %</label><input id="in-pierce" type="number" step="any"></div>';
+  $("#statInputs").insertBefore(g,n);
+  $("#in-acc").value=0; $("#in-pierce").value=0;
+  $("#in-acc").addEventListener("input",e=>{const v=parseFloat(e.target.value);S.acc=isFinite(v)?v:0;recompute();});
+  $("#in-pierce").addEventListener("input",e=>{const v=parseFloat(e.target.value);S.pierce=isFinite(v)?clamp(v,0,100):0;recompute();});
+})();
+/* 직업 버튼. 초상화는 클라이언트 resources.assets 에서 뽑은 것이라 10직업만 있다 —
+   나머지는 같은 프레임 안에 직업군 색 글리프를 넣는다. */
+const JOB_GLYPH={
+  "viper":'<path d="M4 13h11a3 3 0 0 1 0 6H7a3 3 0 0 1-3-3zM6 13V9a2 2 0 0 1 4 0v4M10 13V8a2 2 0 0 1 4 0v5M14 13V9.5a2 2 0 0 1 4 0V15"/>',
+  "captain":'<circle cx="12" cy="12" r="7"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/>',
+  "night-walker":'<path d="M12 3l2.4 5.6L20 11l-5.6 2.4L12 19l-2.4-5.6L4 11l5.6-2.4z"/>',
+  "wind-breaker":'<path d="M17 4a11 11 0 0 1 0 16M17 4l-3 .6M17 20l-3-.6M14 4.6L5 20M14 19.4l-3.4-5.9"/>'
+};
+function jobGlyph(id){
+  const g=JOB_GLYPH[id]||'<circle cx="12" cy="12" r="8"/>';
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" '
+        +'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+g+'</svg>';
+}
+function setJob(id){
+  S.job=id;
+  $$(".jobgrid .jobbtn").forEach(b=>b.setAttribute("aria-checked",b.dataset.id===id?"true":"false"));
+  recompute();
+}
+(function(){
+  const box=$("#jobGrid"), ORD=["전사","법사","궁수","도적"];
+  DATA.jobs.slice().sort((a,b)=>ORD.indexOf(a.fam)-ORD.indexOf(b.fam)).forEach(j=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="jobbtn"; b.dataset.id=j.id; b.dataset.fam=j.fam;
+    b.setAttribute("role","radio"); b.setAttribute("aria-checked", j.id===S.job?"true":"false");
+    b.title=j.ko+" · "+j.fam;
+    const face=ICONS[j.id]
+      ? '<span class="jface"><img src="'+ICONS[j.id]+'" alt="" loading="lazy" decoding="async"></span>'
+      : '<span class="jface">'+jobGlyph(j.id)+'</span>';
+    b.innerHTML=face+'<span class="jname"></span>';
+    b.querySelector(".jname").textContent=j.ko;
+    b.addEventListener("click",()=>setJob(j.id));
+    box.appendChild(b);
+  });
+  // 히어로의 큰 직업 그리드 (같은 클릭 동작)
+  const hero=$("#heroJobs");
+  if(hero){
+    DATA.jobs.slice().sort((a,b)=>ORD.indexOf(a.fam)-ORD.indexOf(b.fam)).forEach(j=>{
+      const b=document.createElement("button");
+      b.type="button"; b.className="jobbtn"; b.dataset.id=j.id; b.dataset.fam=j.fam;
+      b.setAttribute("role","radio"); b.setAttribute("aria-checked", j.id===S.job?"true":"false");
+      b.title=j.ko+" · "+j.fam;
+      b.innerHTML=(ICONS[j.id]
+        ? '<span class="jface"><img src="'+ICONS[j.id]+'" alt="" loading="lazy" decoding="async"></span>'
+        : '<span class="jface">'+jobGlyph(j.id)+'</span>')+'<span class="jname"></span>';
+      b.querySelector(".jname").textContent=j.ko;
+      b.addEventListener("click",()=>setJob(j.id));
+      hero.appendChild(b);
+    });
+  }
+})();
+/* 실계정(ch36 비숍) 기준 예시값 */
+const TYP={atk:437740000,crit:111.4,critd:303.9,dmg:950.1,amp:59.9,statp:1982.3,
+  boss:209.3,norm:159,skill:122.1,basic:85.2,fin:93.7,dmin:259.7,dmax:333.3};
+const TYPCP={hp:44427522,mp:20805,def:56065,eva:287,dtaken:6,aspd:91.1,ail:0,cdpct:0,cdsec:3.5,
+  buffdur:48.1,petdur:8,btgt:3,sk1:26,sk2:0,sk3:20,sk4:112,skAll:42,mainM:17,subM:2};
+function applyPreset(a,b,acc,pie){
+  Object.entries(a).forEach(([k,v])=>{const e=$("#in-"+k); if(e){e.value=v;S.st[k]=v;}});
+  Object.entries(b).forEach(([k,v])=>{const e=$("#cp-"+k); if(e){e.value=v;S.cp[k]=v;}});
+  $("#in-acc").value=acc; S.acc=acc; $("#in-pierce").value=pie; S.pierce=pie;
+  recompute();
+}
+const TYPSUP={main:"SUPPORTER_6_4", mainLv:7,
+  subs:[["SUPPORTER_4_4",7],["SUPPORTER_7_4",3],["SUPPORTER_11_4",6],
+        ["SUPPORTER_7_3",10],["SUPPORTER_9_4",6],["SUPPORTER_12_4",7]]};
+$("#fillTypical").addEventListener("click",()=>{
+  applyPreset(TYP,TYPCP,385,54.5);
+  S.sup=TYPSUP.main; S.supLv=TYPSUP.mainLv;
+  TYPSUP.subs.forEach((x,i)=>{ if(S.subs[i]){ S.subs[i].c=x[0]; S.subs[i].l=x[1]; } });
+  pickT="main"; renderSupSlots(); renderSupPick();
+  S.R=DATA.meta.defaultR; $("#rIn").value=S.R.toFixed(2); $("#rRange").value=S.R;
+  recompute();
+});
+$("#clearStats").addEventListener("click",()=>{
+  const z={},zc={};
+  STAT_F.forEach(([k,,d])=>z[k]=d); CP_F.forEach(([k,,d])=>zc[k]=d);
+  applyPreset(z,zc,0,0);
+});
+const rIn=$("#rIn"), rRange=$("#rRange");
+rIn.addEventListener("input",()=>{const v=parseFloat(rIn.value);S.R=isFinite(v)?Math.max(v,0.1):DATA.meta.defaultR;rRange.value=clamp(S.R,0.5,8);recompute();});
+rRange.addEventListener("input",()=>{S.R=parseFloat(rRange.value);rIn.value=S.R.toFixed(2);recompute();});
+$("#q").addEventListener("input",e=>{S.q=e.target.value.trim();renderList();});
+$("#chSel").addEventListener("change",e=>{S.ch=e.target.value;renderList();});
+$("#modeSegs").addEventListener("click",e=>{
+  const b=e.target.closest(".seg"); if(!b) return;
+  S.mode=b.dataset.mode;
+  $$("#modeSegs .seg").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+  renderList();
+});
+window.addEventListener("resize",()=>draw());
+
+/* ---------- 렌더 ---------- */
+function recompute(){
+  const st=S.stage; if(!st) return;
+  const job=curJob(), V=vec(), lv=lvOf();
+  const ready=V.atk>0;
+  const T=availableS(st);
+  const hasCamp=st.camps&&st.camps.length;
+
+  /* 지표 */
+  $("#tHp").textContent=fmt(st.hp);
+  $("#tHpSub").textContent="개체 "+int(st.spawn)+"마리 · 캠프 "+int(st.nCamp);
+  $("#tTime").textContent=hasCamp?T.toFixed(1)+"초":"—";
+  $("#tTimeSub").textContent=st.exitMm?("출구까지 "+int(st.exitMm)+"mm"):"스폰 정보 없음";
+  const sup=curSup();
+  const D=ready?dps(job,st,V,lv,S.R,false,sup,S.supLv):0;
+  $("#tDps").textContent=ready?fmt(D):"—";
+  $("#tDpsSub").textContent=hasCamp?("필요 "+fmt(st.hp/T)):"—";
+  $("#tAcc").textContent=int(st.ev);
+  const gap=Math.max(st.ev-S.acc,0), ev=evadePct(gap);
+  $("#tAccSub").textContent=S.acc?(gap?("격차 "+int(gap)+" · 손실 "+pct(ev)):"미스 0%"):"명중 입력 전";
+
+  /* 판정 */
+  const res=ready&&hasCamp?clearProb(job,st,V,lv,S.R,500,sup,S.supLv):null;
+  const v=$("#verdict");
+  const RC=2*Math.PI*52;
+  const arc=$("#ringArc"), pv=$("#probV"), mk=$("#rMark"), wy=$("#rWhy"), sb=$("#rSub");
+  if(!res){
+    v.className="result"; arc.setAttribute("stroke-dasharray","0 "+RC.toFixed(1));
+    pv.textContent="—"; sb.textContent="";
+    if(!ready){ mk.textContent="스탯을 입력하세요";
+      wy.textContent="직업을 고르고 스탯창 값을 넣으면 이 스테이지를 깰 확률을 계산합니다."; }
+    else{ mk.textContent="판정 없음";
+      wy.textContent="스폰 구성이 없는 콘텐츠입니다. 돌파와 챕터 보스에서만 클리어 확률을 계산합니다."; }
+  }else{
+    const p=res.p*100;
+    v.className="result "+(p>=85?"ok":p>=25?"edge":"no");
+    arc.setAttribute("stroke-dasharray",(RC*res.p).toFixed(1)+" "+RC.toFixed(1));
+    pv.textContent=Math.round(p)+"%";
+    mk.textContent=p>=85?"클리어":p>=50?"될 만함":p>=20?"아슬아슬":"불가";
+    wy.textContent=whyLine(st,V,job,lv,res,sup);
+    sb.textContent="클리어 확률 "+pct(p,0)+" · 여유 배수 ×"+res.ratio.toFixed(2)
+      +" (10~90% 구간 ×"+res.band[0].toFixed(2)+"~×"+res.band[1].toFixed(2)+")";
+  }
+  const bar=$("#meter").querySelector("i");
+  bar.style.width=(res?Math.min(res.ratio,1)*100:0)+"%";
+  bar.className=res&&res.ratio>=1?"over":"under";
+  $("#meterL").textContent=ready&&hasCamp?(fmt(D*T)+" / 총 HP "+fmt(st.hp)):"—";
+
+  /* 경고 */
+  const N=[];
+  if(!hasCamp) N.push(["neutral","이 콘텐츠는 스폰 구성이 없어 방어형 판정을 적용하지 않습니다."]);
+  if(S.acc&&gap>0) N.push(["bad","명중이 "+int(gap)+" 부족해 기대 피해의 "+pct(ev)+"를 잃고 있습니다. 다른 무엇보다 우선입니다."]);
+  if(!S.acc) N.push(["neutral","명중을 입력하세요. 이 스테이지는 "+int(st.ev)+"부터 미스 0%입니다."]);
+  const hasBoss=hasCamp&&st.camps.some(c=>c[1].some(m=>m[3]));
+  if(!hasBoss&&S.st.boss>0) N.push(["warn","이 스테이지에는 보스가 없습니다. 보스 데미지는 기여하지 않습니다."]);
+  if(S.pierce>=90) N.push(["neutral","방관이 높습니다. 체인 캡이라 추가 방관의 실효 증가분이 급감합니다."]);
+  if(S.st.crit>100) N.push(["warn","크리티컬 확률은 100%에서 잘립니다. 초과분은 크리티컬 데미지로 돌리는 편이 낫습니다."]);
+  if(!ready) N.push(["neutral","공격력을 입력하면 계산을 시작합니다."]);
+  if(!N.length) N.push(["ok","걸리는 조건 없음. 명중 게이트 통과, 낭비되는 피해 옵션 없음."]);
+  const nb=$("#notes"); nb.textContent="";
+  N.forEach(([c,t])=>{const d=document.createElement("div");d.className="note "+c;d.textContent=t;nb.appendChild(d);});
+
+  /* R 힌트 */
+  const rh=$("#rHint");
+  if(ready&&hasCamp){
+    const need=1/clearRatio(job,st,V,lv,1,sup,S.supLv);
+    rh.style.display="";
+    rh.innerHTML="<span>이 스테이지를 정확히 통과하는 <b>R = "+need.toFixed(2)+"</b>"
+      +(sup?" (동료 "+sup.ko+" "+sup.grade+" Lv"+S.supLv+" 포함)":" (동료 없음)")
+      +". 지금 깨는 마지막 스테이지에서 이 값을 읽으면 그게 내 R 입니다.</span>";
+  } else rh.style.display="none";
+
+  gates(st);
+  supCard(st,V,job,lv,D);
+  subSummary();
+  rotTable(job,st,sup?applySupBuffs(V,sup,S.supLv):V,lv);
+  campTable(st);
+  power(st,job,V,lv);
+  retune(job,st,V,lv);
+  recommend(st,V,job,lv);
+  actions(st,V,job,lv);
+  meBar();
+  if(TAB==="stage") stageInsights();
+  if(TAB==="sup") supDex();
+  draw();
+}
+
+/* 판정 한 줄 설명 — 시간이 모자라는지, 미스로 새는지. */
+function whyLine(st,V,job,lv,res,sup){
+  const T=availableS(st), sp=hpSplit(st);
+  const dn=dps(job,st,V,lv,S.R,false,sup,S.supLv);
+  const db=sp.b>0?dps(job,st,V,lv,S.R,true,sup,S.supLv):0;
+  const need=(dn>0?sp.n/dn:0)+(db>0?sp.b/db:0);
+  const out=[];
+  if(res.ratio>=1)
+    out.push("다 잡는 데 "+need.toFixed(0)+"초, 보스가 출구에 닿기까지 "+T.toFixed(0)
+             +"초 — "+(T-need).toFixed(0)+"초 남습니다.");
+  else
+    out.push("다 잡는 데 "+need.toFixed(0)+"초가 걸리는데 보스는 "+T.toFixed(0)
+             +"초면 출구에 닿습니다. 초당 피해가 "+pct((1/res.ratio-1)*100,0)+" 더 필요합니다.");
+  const gap=Math.max(st.ev-S.acc,0);
+  if(S.acc&&gap>0) out.push("명중이 "+int(gap)+" 모자라 피해의 "+pct(evadePct(gap),0)+"를 미스로 버립니다.");
+  else if(!S.acc) out.push("명중을 입력하지 않았습니다 — 이 스테이지는 "+int(st.ev)+"부터 미스 0% 입니다.");
+  return out.join(" ");
+}
+
+/* ---------- 지금 뭘 바꾸면 되나 ---------- */
+/* 성격이 다른 두 가지를 한 목록에 섞는다.
+   · 충족형 — 게임 규칙상 목표가 정해진 행동(명중 채우기, 크리 100%, 동료 교체·만렙).
+   · 투자형 — 끝이 없는 능력치. 서로 비교하려면 비용 기준이 같아야 해서
+     "표시 전투력 +5% 를 이 능력치 하나에 몰았을 때"로 환산한다.
+   정렬은 확률이 아니라 여유 배수로 한다 — 확률은 클리어선을 넘는 순간 100% 에 붙어
+   서로 다른 행동이 전부 같은 값으로 묶여 버린다. */
+const CP_BUDGET=5;
+function budgetStep(m,V,full,cpFull){
+  const cap=m.cap(V); if(!(cap>0)) return null;
+  const f=x=>combatPower(Object.assign({},full,m.ov(V,x)))/cpFull;
+  const tgt=1+CP_BUDGET/100;
+  if(f(cap)<tgt) return null;        // 상한까지 올려도 예산을 못 쓴다 — 같은 잣대로 비교 불가
+  let lo=0,hi=cap;
+  for(let i=0;i<60;i++){const mid=(lo+hi)/2; if(f(mid)>=tgt) hi=mid; else lo=mid;}
+  return hi;
+}
+const stepTxt=(x,u)=>"+"+(x>=100?fmt(x):x.toFixed(x<10?1:0))+u;
+function actions(st,V,job,lv){
+  const box=$("#actList"), hint=$("#actHint");
+  box.textContent="";
+  const say=(t,cls)=>{const d=document.createElement("div");
+    d.className="actempty"+(cls?" "+cls:""); d.textContent=t; box.appendChild(d);};
+  const hasCamp=st.camps&&st.camps.length;
+  if(!(V.atk>0)){ hint.textContent="—";
+    say("아래 \u2018내 캐릭터\u2019에 스탯을 넣으면 무엇을 올려야 확률이 가장 많이 오르는지 순서대로 보여줍니다. 처음이라면 \u2018예시 채우기\u2019로 실계정 값을 넣어 볼 수 있습니다."); return; }
+  if(!hasCamp){ hint.textContent="—";
+    say("스폰 구성이 없는 콘텐츠라 클리어 확률을 계산하지 않습니다. 돌파나 챕터 보스를 고르세요."); return; }
+
+  const sup=curSup(), full=cpVec(), cpFull=combatPower(full);
+  const base=clearProb(job,st,V,lv,S.R,0,sup,S.supLv);
+  hint.textContent="지금 "+pct(base.p*100,0)+" 기준";
+  if(!(base.ratio>0)){ say("초당 피해가 0 이라 비교할 수 없습니다. 공격력과 직업을 확인하세요."); return; }
+
+  const A=[];
+  const add=(kind,name,detail,res,cpPct)=>{
+    const dr=(res.ratio/base.ratio-1)*100;
+    if(!(dr>0.05)) return;
+    A.push({kind:kind,name:name,detail:detail,dr:dr,
+            dp:(res.p-base.p)*100, ratio:res.ratio, cp:cpPct});
+  };
+  const withOv=ov=>clearProb(job,st,Object.assign({},V,ov),lv,S.R,0,sup,S.supLv);
+  const cpOf=ov=>(combatPower(Object.assign({},full,ov))/cpFull-1)*100;
+
+  /* --- 충족형: 게임 규칙이 목표를 정해 주는 것들 --- */
+  const gap=Math.max(st.ev-S.acc,0);
+  if(gap>0) add("gate","명중 "+int(S.acc)+" → "+int(st.ev),
+    "미스로 버리는 피해 "+pct(evadePct(gap),0)+"를 되찾습니다 · 넘겨도 더 이득은 없는 지점",
+    withOv({acc:st.ev}), cpOf({acc:st.ev}));
+  if(V.crit<100) add("","크리티컬 확률 "+pct(V.crit,0)+" → 100%",
+    "게임 상한까지 · 100% 를 넘긴 몫은 기여하지 않습니다",
+    withOv({crit:100}), cpOf({crit:100}));
+
+  /* --- 동료 --- */
+  const supR=(x,l)=>clearProb(job,st,V,lv,S.R,0,x,l);
+  if(sup){
+    const mx=capOf(sup.grade);
+    if(S.supLv<mx) add("sup",sup.ko+" "+sup.grade+" Lv"+S.supLv+" → Lv"+mx+" (만렙)",
+      "지금 쓰는 동료를 만렙까지 — 계승률과 장착 옵션이 같이 오릅니다", supR(sup,mx), 0);
+  }
+  const seenKo={}; if(sup) seenKo[sup.ko]=1;
+  DATA.supporters.map(x=>({x:x,r:supR(x,capOf(x.grade))}))
+    .sort((a,b)=>b.r.ratio-a.r.ratio)
+    .filter(r=>{ if(seenKo[r.x.ko]) return false; seenKo[r.x.ko]=1; return true; })
+    .slice(0,3)
+    .forEach(r=>add("sup","메인 동료 → "+r.x.ko+" "+r.x.grade,
+      "만렙 Lv"+capOf(r.x.grade)+" 기준 · 전용 스킬 "+r.x.skills.length+"개", r.r, 0));
+
+  /* --- 투자형: 전투력 예산을 똑같이 주고 비교 --- */
+  UP.forEach(m=>{
+    if(m.ko==="명중") return;                        // 게이트 행이 이미 답이다
+    if(m.ko==="크리티컬 확률"&&V.crit<100) return;    // 위에서 상한까지 다뤘다
+    const x=budgetStep(m,V,full,cpFull); if(x==null) return;
+    const ov=m.ov(V,x);
+    add("",m.ko+" "+stepTxt(x,m.u),
+      "표시 전투력 +"+CP_BUDGET+"% 를 여기에 다 쓴 경우", withOv(ov), cpOf(ov));
+  });
+
+  A.sort((a,b)=>b.dr-a.dr);
+  if(!A.length){
+    say(base.p>=0.985
+      ? "이미 안정적으로 깨는 스테이지입니다. 다음 스테이지를 골라 보세요."
+      : "단일 변경으로 확률이 오르지 않습니다. 여러 축을 같이 올려야 하는 구간입니다.");
+    return;
+  }
+  const top=A.slice(0,8), mx=top[0].dr;
+  top.forEach((r,i)=>{
+    const w=document.createElement("div");
+    w.className="actrow"+(i===0?" top":"");
+    w.innerHTML='<span class="rk"></span>'
+      +'<div><div class="an"><span class="nm"></span></div><div class="ad"></div></div>'
+      +'<div class="abar"><i></i></div>'
+      +'<div class="ap"><span class="dv"></span><small></small></div>';
+    w.querySelector(".rk").textContent=i+1;
+    w.querySelector(".nm").textContent=r.name;
+    const an=w.querySelector(".an");
+    const badge=(cls,txt)=>{const k=document.createElement("span");k.className="akind "+cls;
+      k.textContent=txt; an.appendChild(k);};
+    if(r.kind==="gate") badge("gate","게이트");
+    if(r.kind==="sup") badge("sup","동료");
+    if(base.p<0.85&&(base.p*100+r.dp)>=85) badge("clear","이거면 클리어");
+    w.querySelector(".ad").textContent=r.detail
+      +"  ·  여유 배수 ×"+base.ratio.toFixed(2)+" → ×"+r.ratio.toFixed(2)
+      +(r.cp>0.01?"  ·  표시 전투력 +"+r.cp.toFixed(1)+"%":"");
+    w.querySelector(".abar i").style.width=Math.max(r.dr/mx*100,2).toFixed(1)+"%";
+    const dp=w.querySelector(".dv"), un=w.querySelector(".ap small");
+    if(r.dp>=0.05){ dp.textContent="+"+r.dp.toFixed(r.dp<1?2:0); un.textContent="%p"; }
+    else{ w.querySelector(".ap").className="ap zero";
+          dp.textContent="+"+r.dr.toFixed(1); un.textContent="% 배수"; }
+    box.appendChild(w);
+  });
+  /* 전투력이 거의 안 오르면서 피해는 오르는 항목 — 예산 비교에서 빠지므로 따로 알린다. */
+  const cheap=UP.map(m=>{
+    if(m.ko==="명중") return null;
+    const step=UP_STEP[m.ko]||1; if(m.cap(V)<step) return null;
+    const ov=m.ov(V,step);
+    const dr=(clearRatio(job,st,Object.assign({},V,ov),lv,S.R,sup,S.supLv)/base.ratio-1)*100;
+    const dc=(combatPower(Object.assign({},full,ov))/cpFull-1)*100;
+    return (dr>1e-6&&dc<1e-3)? {ko:m.ko,u:step+m.u,dr:dr} : null;
+  }).filter(Boolean).sort((a,b)=>b.dr-a.dr)[0];
+  if(cheap) say(cheap.ko+" 은(는) 표시 전투력을 거의 올리지 않으면서 "+cheap.u
+    +" 당 여유 배수가 "+cheap.dr.toFixed(2)+"% 오릅니다 — 전투력 예산 비교에는 안 잡히지만 가장 싼 축입니다.");
+}
+
+function gates(st){
+  const gap=Math.max(st.ev-S.acc,0), ev=evadePct(gap);
+  const a=$("#accVerdict");
+  if(!S.acc){ a.className="verdict warn";
+    a.innerHTML="<span>명중을 입력하면 미스 손실을 계산합니다. 이 스테이지는 <b>"+int(st.ev)+"</b>부터 미스 0%입니다.</span>"; }
+  else { a.className="verdict "+(gap===0?"ok":ev>=20?"bad":"warn");
+    a.innerHTML=gap===0?"<span><b>통과</b> — 회피 "+int(st.ev)+" 이상 확보. 명중을 더 올려도 피해는 늘지 않습니다.</span>"
+      :"<span><b>격차 "+int(gap)+"</b> — 회피율 "+pct(ev)+", 기대 피해 "+pct(ev)+" 손실. "+int(gap)+" 부족합니다.</span>"; }
+  const p=clamp(S.pierce,0,100)/100;
+  const m0=5000/(st.df+6000), m=5000/(st.df*(1-p)+6000);
+  const d=$("#defVerdict");
+  d.className="verdict "+(p>=0.9?"ok":p>=0.5?"warn":"bad");
+  d.innerHTML="<span>대상 방어력 <b>"+int(st.df)+"</b> → 관통 후 <b>"+int(st.df*(1-p))
+    +"</b> · 피해 배율 <b>"+m.toFixed(4)+"</b> (관통 0% 대비 +"+((m/m0-1)*100).toFixed(1)+"%)</span>";
+}
+
+function rotTable(job,st,V,lv){
+  const tb=$("#rotBody"); tb.textContent="";
+  if(!(V.atk>0)){ const tr=document.createElement("tr");
+    tr.innerHTML='<td colspan="7" style="color:var(--ink-3);font-size:12.5px">공격력을 입력하면 로테이션을 계산합니다.</td>';
+    tb.appendChild(tr); return; }
+  const rows=rotation(job,st,V,lv,false);
+  const tot=rows.reduce((a,r)=>a+r.dps,0)||1;   // 같은 기준끼리 나눈다
+  rows.forEach(r=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML='<td></td><td></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td>';
+    const c=tr.children;
+    c[0].textContent=r.n; c[1].textContent=r.kind;
+    c[2].textContent=pct(r.dp,0); c[3].textContent=r.hc+"타"; c[4].textContent=r.tg;
+    c[5].textContent=r.cyc.toFixed(2)+"초"; c[6].textContent=pct(r.dps/tot*100);
+    tb.appendChild(tr);
+  });
+}
+
+function campTable(st){
+  const tb=$("#campBody"); tb.textContent="";
+  if(!st.camps||!st.camps.length){ const tr=document.createElement("tr");
+    tr.innerHTML='<td colspan="6" style="color:var(--ink-3);font-size:12.5px">이 콘텐츠는 스폰 구성 정보가 없습니다.</td>';
+    tb.appendChild(tr); return; }
+  const ex=st.exitMm||21500;
+  st.camps.forEach(c=>c[1].forEach(m=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML='<td class="n"></td><td></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td>';
+    const x=tr.children;
+    x[0].textContent=(c[0]/1000).toFixed(0)+"초";
+    x[1].innerHTML=(NAMES[m[0]]||"?")+(m[3]?' <span class="bosspill">보스</span>':'');
+    x[2].textContent=m[1]; x[3].textContent=fmt(m[2]);
+    x[4].textContent=int(m[4])+"mm/s"; x[5].textContent=(ex/m[4]).toFixed(1)+"초";
+    tb.appendChild(tr);
+  }));
+}
+
+/* ---------- 전투력 · 뻥투력 ---------- */
+function power(st,job,V,lv){
+  const full=cpVec(), cpFull=combatPower(full);
+  const hasBoss=st.camps&&st.camps.some(c=>c[1].some(m=>m[3]));
+  const DEAD=[];
+  DEAD.push({ko:"최대 HP · 방어력 · 최대 MP",
+    why:"공식에서 한 항을 공유하는 생존 스탯 묶음 · 배율이 아닌 절대값으로 들어감",
+    set:{hp:0,def:0,mp:500}});
+  DEAD.push({ko:"회피", why:"내가 맞는 판정에만 관여", set:{eva:0}});
+  DEAD.push({ko:"받는 피해 감소", why:"생존 능력치", set:{dtaken:0}});
+  if(S.acc>st.ev) DEAD.push({ko:"명중 초과분 "+int(S.acc-st.ev),
+    why:"대상 회피 "+int(st.ev)+" 초과분은 피해 기여 0 · 전투력 가중치는 4,500 으로 최대",
+    set:{acc:st.ev}});
+  if(!hasBoss&&S.st.boss>0) DEAD.push({ko:"보스 몬스터 데미지",
+    why:"이 스테이지에 보스가 없음", set:{boss:0}});
+  const OUT=[{set:{aspd:0}},{set:{cdpct:0,cdsec:0}},{set:{buffdur:0}},{set:{petdur:0}},
+             {set:{ail:0}},{set:{sk1:0,sk2:0,sk3:0,sk4:0,skAll:0}},{set:{mainM:0,subM:0}}];
+  const strip=(b,l)=>combatPower(Object.assign.apply(null,[{},b].concat(l.map(x=>x.set))));
+  const noDead=strip(full,DEAD);
+  const eff=strip(Object.assign.apply(null,[{},full].concat(DEAD.map(x=>x.set))),OUT);
+  const L=Math.log, LT=cpFull>1?L(cpFull):0, ok=LT>1&&eff>1;
+  const dead=ok?(LT-L(noDead))/LT:0, out=ok?(L(noDead)-L(eff))/LT:0, use=ok?L(eff)/LT:1;
+  const ready=ok&&(S.st.atk>0||S.cp.hp>0);
+  $("#cpFull").textContent=ready?fmt(cpFull):"—";
+  $("#cpEff").textContent=ready?fmt(eff):"—";
+  $("#cpDead").textContent=ready?pct(dead*100):"—";
+  $("#cpDeadSub").textContent=ready?("유효 "+pct(use*100)+" · 측정 외 "+pct(out*100)):"스탯을 입력하세요";
+  const b=$$("#cpStack i");
+  b[0].style.width=(use*100).toFixed(2)+"%"; b[1].style.width=(out*100).toFixed(2)+"%";
+  b[2].style.width=(dead*100).toFixed(2)+"%";
+  const dl=$("#deadList"); dl.textContent="";
+  const rows=DEAD.map(d=>{
+    const w=combatPower(Object.assign({},full,d.set));
+    return {ko:d.ko,why:d.why,share:ok&&w>1?(LT-L(w))/LT:0,mult:w>0?cpFull/w:1};
+  }).filter(r=>r.share>1e-6).sort((a,b)=>b.share-a.share);
+  if(!rows.length){ const e=document.createElement("p");
+    e.style.cssText="font-size:12.5px;color:var(--ink-3)";
+    e.textContent=ready?"이 스테이지에서 놀고 있는 전투력이 없습니다.":"스탯을 입력하면 계산합니다.";
+    dl.appendChild(e); return; }
+  rows.forEach(r=>{
+    const w=document.createElement("div"); w.className="deadrow";
+    w.innerHTML='<div><div></div><div class="why"></div></div><span class="cpv"></span><span class="amt"></span>';
+    w.children[0].children[0].textContent=r.ko;
+    w.children[0].children[1].textContent=r.why;
+    w.children[1].textContent="×"+fmt(r.mult);
+    w.children[2].textContent=pct(r.share*100,2);
+    dl.appendChild(w);
+  });
+}
+
+/* ---------- 스탯 재배분 ---------- */
+/* 올릴 후보. 피해벡터와 전투력벡터가 필드명을 공유하므로 override 를 양쪽에 그대로 얹는다.
+   ov(v,x) = 그 능력치를 x 만큼 올린 override. cap(v) = 더 올릴 수 있는 최대 x. */
+const UP=[
+  {ko:"공격력",         u:"%",  ov:(v,x)=>({atk:v.atk*(1+x/100)}),            cap:()=>100000},
+  {ko:"크리티컬 확률",   u:"%p", ov:(v,x)=>({crit:Math.min(v.crit+x,100)}),     cap:v=>Math.max(100-v.crit,0)},
+  {ko:"크리티컬 데미지", u:"%p", ov:(v,x)=>({critd:v.critd+x}),                cap:()=>100000},
+  {ko:"데미지",         u:"%p", ov:(v,x)=>({dmg:v.dmg+x}),                    cap:()=>100000},
+  {ko:"데미지 증폭",     u:"%p", ov:(v,x)=>({amp:v.amp+x}),                    cap:()=>100000},
+  {ko:"스탯 비례 데미지", u:"%p", ov:(v,x)=>({statp:v.statp+x}),               cap:()=>1000000},
+  {ko:"최종 데미지",     u:"%p", ov:(v,x)=>({fin:v.fin+x}),                    cap:()=>100000},
+  {ko:"최대 데미지 배율", u:"%p", ov:(v,x)=>({dmax:v.dmax+x}),                  cap:()=>1000},
+  {ko:"최소 데미지 배율", u:"%p", ov:(v,x)=>({dmin:Math.min(v.dmin+x,v.dmax)}), cap:v=>Math.max(v.dmax-v.dmin,0)},
+  {ko:"스킬 데미지",     u:"%p", ov:(v,x)=>({skill:v.skill+x}),                cap:()=>100000},
+  {ko:"기본 공격 데미지", u:"%p", ov:(v,x)=>({basic:v.basic+x}),               cap:()=>100000},
+  {ko:"보스 몬스터 데미지",u:"%p",ov:(v,x)=>({boss:v.boss+x}),                  cap:()=>100000},
+  {ko:"일반 몬스터 데미지",u:"%p",ov:(v,x)=>({norm:v.norm+x}),                  cap:()=>100000},
+  {ko:"공격 속도",       u:"%p", ov:(v,x)=>({aspd:Math.min(v.aspd+x,150)}),    cap:v=>Math.max(150-v.aspd,0)},
+  {ko:"쿨타임 감소",     u:"초", ov:(v,x)=>({cdsec:v.cdsec+x}),                cap:()=>30},
+  {ko:"방어 관통력",     u:"%p", ov:(v,x)=>({pierce:Math.min(v.pierce+x,100)}),cap:v=>Math.max(100-v.pierce,0)},
+  {ko:"명중",           u:"",   ov:(v,x)=>({acc:v.acc+x}),                    cap:()=>1e7},
+];
+const UP_STEP={"공격력":1,"쿨타임 감소":0.1,"명중":1};
+/* 이 능력치 하나만 올려서 여유 배수 1.00 을 넘기려면 얼마가 필요한가 (이분법). */
+function soloNeed(m,job,st,V,lv,sup,R){
+  const f=x=>clearRatio(job,st,Object.assign({},V,m.ov(V,x)),lv,R,sup,S.supLv);
+  const hi=m.cap(V);
+  if(!(hi>0)||f(hi)<1) return null;
+  let lo=0,h=hi;
+  for(let i=0;i<50;i++){ const mid=(lo+h)/2; if(f(mid)>=1) h=mid; else lo=mid; }
+  return h;
+}
+/* 버릴 후보. cut = "그 능력치를 지금 값에서 0(또는 상한)까지 없앤다". */
+function downCands(st,V){
+  const C=[];
+  const push=(ko,cur,cut,why,model)=>C.push({ko:ko,cur:cur,cut:cut,why:why,model:!!model});
+  if(S.cp.hp||S.cp.def||S.cp.mp>500)
+    push("최대 HP · 방어력 · 최대 MP", fmt(S.cp.hp)+" / "+fmt(S.cp.def)+" / "+fmt(S.cp.mp),
+         {hp:0,def:0,mp:500}, "생존 능력치 — 피해 계산에 들어가지 않음", true);
+  if(S.cp.eva)     push("회피", int(S.cp.eva), {eva:0}, "내가 맞는 판정에만 관여", true);
+  if(S.cp.dtaken)  push("받는 피해 감소", pct(S.cp.dtaken), {dtaken:0}, "생존 능력치", true);
+  if(S.cp.ail)     push("상태이상 데미지", pct(S.cp.ail), {ail:0}, "상태이상 적용 여부를 모델이 다루지 않음", true);
+  if(S.cp.buffdur) push("버프 지속시간", pct(S.cp.buffdur), {buffdur:0}, "로테이션이 쿨타임 기준이라 미반영", true);
+  if(S.cp.petdur)  push("펫 지속시간", pct(S.cp.petdur), {petdur:0}, "모델 미반영", true);
+  if(S.cp.cdpct)   push("쿨타임 감소 %", pct(S.cp.cdpct), {cdpct:0}, "초 단위 감소만 반영 — % 감소는 미반영", true);
+  if(S.acc>st.ev)  push("명중 초과분", int(S.acc)+" (필요 "+int(st.ev)+")", {acc:st.ev},
+                        "대상 회피 초과분은 피해 기여 0 · 전투력 가중치는 4,500 으로 최대");
+  if(S.pierce>100) push("방어 관통력 초과분", pct(S.pierce), {pierce:100}, "100% 초과분은 계산에 반영되지 않음");
+  if(S.st.crit>100)push("크리티컬 확률 초과분", pct(S.st.crit), {crit:100}, "100% 초과분은 기여 0");
+  const sp=hpSplit(st);
+  if(!(sp.b>0)&&S.st.boss>0) push("보스 몬스터 데미지", pct(S.st.boss), {boss:0}, "이 스테이지에 보스가 없음");
+  if(!(sp.n>0)&&S.st.norm>0) push("일반 몬스터 데미지", pct(S.st.norm), {norm:0}, "이 스테이지에 일반 몬스터가 없음");
+  return C;
+}
+function retune(job,st,V,lv){
+  const ul=$("#upList"), dl=$("#downList"), nb=$("#swapNote");
+  ul.textContent=""; dl.textContent=""; nb.textContent="";
+  const empty=(tb,msg,cols)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML='<td colspan="'+cols+'" style="color:var(--ink-3);font-size:12.5px"></td>';
+    tr.firstChild.textContent=msg; tb.appendChild(tr);
+  };
+  const hasCamp=st.camps&&st.camps.length;
+  if(!(V.atk>0)||!hasCamp){
+    empty(ul,"공격력을 입력하면 능력치별 효과를 계산합니다.",6);
+    empty(dl,"공격력을 입력하면 계산합니다.",5);
+    return;
+  }
+  const sup=curSup();
+  const full=cpVec(), cpFull=combatPower(full);
+  const base=clearProb(job,st,V,lv,S.R,0,sup,S.supLv);
+  const baseD=dps(job,st,V,lv,S.R,false,sup,S.supLv);
+  const baseR=base.ratio;
+
+  /* --- 올릴 능력치 --- */
+  const rows=UP.map(m=>{
+    const step=UP_STEP[m.ko]||1;
+    if(m.cap(V)<step) return null;
+    const ov=m.ov(V,step);
+    const dd=(dps(job,st,Object.assign({},V,ov),lv,S.R,false,sup,S.supLv)/baseD-1)*100;
+    const dr=(clearRatio(job,st,Object.assign({},V,ov),lv,S.R,sup,S.supLv)/baseR-1)*100;
+    const dp=(clearProb(job,st,Object.assign({},V,ov),lv,S.R,0,sup,S.supLv).p-base.p)*100;
+    const dc=(combatPower(Object.assign({},full,ov))/cpFull-1)*100;
+    if(!(dr>1e-6)) return null;
+    return {ko:m.ko, u:"+"+step+m.u, dr:dr, dp:dp, dc:dc,
+            eff:dc>1e-3?dr/dc:null, need:soloNeed(m,job,st,V,lv,sup,S.R), un:m.u};
+  }).filter(Boolean).sort((a,b)=>b.dr-a.dr);
+  if(!rows.length) empty(ul,"현재 세팅에서 효과가 있는 능력치가 없습니다.",6);
+  const fmtNeed=r=>{
+    if(baseR>=1) return "이미 충족";
+    if(r.need==null) return "단독으론 불가";
+    const v=r.need;
+    return "+"+(v>=100?fmt(v):v.toFixed(v<10?1:0))+r.un;
+  };
+  rows.forEach((r,i)=>{
+    const tr=document.createElement("tr");
+    if(i===0) tr.style.background="var(--accent-soft)";
+    tr.innerHTML='<td></td><td style="color:var(--ink-3)"></td>'
+      +'<td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td>';
+    const c=tr.children;
+    c[0].textContent=r.ko; c[1].textContent=r.u;
+    c[2].textContent="+"+r.dr.toFixed(2)+"%";
+    c[3].textContent=r.dp>=0.01?"+"+r.dp.toFixed(2)+"%p":"—";
+    c[3].style.color=r.dp>=0.01?"var(--pass)":"var(--ink-3)";
+    c[4].textContent=r.dc>1e-9?"+"+r.dc.toFixed(3)+"%":"0%";
+    c[5].textContent=fmtNeed(r);
+    if(r.need==null&&baseR<1) c[5].style.color="var(--ink-3)";
+    ul.appendChild(tr);
+  });
+
+  /* --- 버려도 되는 능력치 --- */
+  const RANK={drop:0,trim:1,na:2,keep:3};
+  const cands=downCands(st,V).map(d=>{
+    const V2=Object.assign({},V,d.cut), c2=Object.assign({},full,d.cut);
+    const lossD=(1-dps(job,st,V2,lv,S.R,false,sup,S.supLv)/baseD)*100;
+    const lossR=(1-clearRatio(job,st,V2,lv,S.R,sup,S.supLv)/baseR)*100;
+    const lossC=(1-combatPower(c2)/cpFull)*100;
+    let k;
+    if(lossR>=1) k="keep"; else if(d.model) k="na";
+    else if(lossR<0.01) k="drop"; else k="trim";
+    return Object.assign({},d,{lossD:lossD,lossR:lossR,lossC:lossC,k:k});
+  }).sort((a,b)=>RANK[a.k]-RANK[b.k]||b.lossC-a.lossC);
+  if(!cands.length) empty(dl,"이 스테이지에서 놀고 있는 능력치가 없습니다.",5);
+  const LABEL={drop:"버려도 됨",trim:"줄여도 됨",na:"모델 미반영",keep:"유지"};
+  cands.forEach(d=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML='<td><div></div><div style="font-size:11px;color:var(--ink-3);margin-top:2px"></div></td>'
+      +'<td style="color:var(--ink-3)"></td><td class="n"></td><td class="n"></td><td></td>';
+    const c=tr.children;
+    c[0].children[0].textContent=d.ko; c[0].children[1].textContent=d.why;
+    c[1].textContent=d.cur;
+    c[2].textContent=d.lossR<0.01?"0%":"-"+d.lossR.toFixed(2)+"%";
+    c[2].style.color=d.lossR<0.01?"var(--ink-3)":"var(--fail)";
+    c[3].textContent="-"+d.lossC.toFixed(2)+"%";
+    const t=document.createElement("span");
+    t.className="tag "+d.k; t.textContent=LABEL[d.k];
+    c[4].appendChild(t);
+    dl.appendChild(tr);
+  });
+
+  /* --- 요약 --- */
+  const best=rows[0];
+  const val=rows.filter(r=>r.eff!=null).sort((a,b)=>b.eff-a.eff)[0];
+  const junk=cands.filter(d=>d.k==="drop").sort((a,b)=>b.lossC-a.lossC)[0];
+  if(best){
+    const d1=document.createElement("div"); d1.className="note ok";
+    d1.textContent="같은 폭을 올렸을 때 효과가 가장 큰 건 "+best.ko+" 입니다. "
+      +best.u+" 당 여유 배수 +"+best.dr.toFixed(2)+"%"
+      +(baseR<1?(" · 이것만으로 돌파하려면 "+fmtNeed(best)):"")
+      +(val&&val.ko!==best.ko
+        ? "  전투력 대비 가성비는 "+val.ko+" 가 가장 좋습니다 (전투력 1% 당 여유 배수 +"
+          +val.eff.toFixed(2)+"%)."
+        : (val? "  전투력 1% 당 여유 배수 +"+val.eff.toFixed(2)+"% 로 가성비도 1위입니다." : ""));
+    nb.appendChild(d1);
+  }
+  if(junk){
+    const d2=document.createElement("div"); d2.className="note warn";
+    d2.textContent=junk.ko+" 은(는) 표시 전투력의 "+junk.lossC.toFixed(2)
+      +"% 를 차지하면서 이 스테이지 피해에는 전혀 기여하지 않습니다. "
+      +"옵션을 다시 굴릴 수 있다면 여기서 빼서 "+(best?best.ko:"공격 능력치")+" 쪽으로 옮기세요.";
+    nb.appendChild(d2);
+  }
+  const d3=document.createElement("div"); d3.className="note neutral";
+  d3.textContent="'모델 미반영'은 쓸모없다는 뜻이 아니라 이 계산기가 피해량으로 환산하지 못한다는 뜻입니다. "
+    +"몬스터에게 맞아 죽는 상황이라면 생존 능력치는 그대로 두세요. "
+    +"'버려도 됨'도 이 스테이지 한정 판정입니다.";
+  nb.appendChild(d3);
+}
+
+/* ---------- 동료 카드 ---------- */
+function supCard(st,V,job,lv,totalDps){
+  const sup=curSup();
+  const tb=$("#supBody"); tb.textContent="";
+  const bb=$("#supBuffs"); bb.textContent="";
+  if(!sup){
+    $("#supInherit").textContent="—"; $("#supDps").textContent="—";
+    $("#supShare").textContent="동료를 선택하세요"; $("#supDur").textContent="—";
+    const tr=document.createElement("tr");
+    tr.innerHTML='<td colspan="6" style="color:var(--ink-3);font-size:12.5px">동료를 선택하면 전용 스킬과 기여도를 보여줍니다.</td>';
+    tb.appendChild(tr); return;
+  }
+  const inh=inheritRate(sup,S.supLv);
+  $("#supInherit").textContent=pct(inh*100,0);
+  $("#supDur").textContent=(sup.dur/1000).toFixed(0)+"초";
+  const rows=supRows(sup,st,applySupBuffs(V,sup,S.supLv),S.supLv);
+  const d=rows.reduce((a,r)=>a+r.dps,0);
+  $("#supDps").textContent=V.atk>0?fmt(d):"—";
+  $("#supShare").textContent=(V.atk>0&&totalDps>0)?("전체의 "+pct(d/totalDps*100)):"공격력을 입력하세요";
+  const tot=d||1;
+  rows.forEach(r=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML='<td></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td>';
+    const c=tr.children;
+    c[0].textContent=r.n; c[1].textContent=pct(r.dp,0); c[2].textContent=r.hc+"타";
+    c[3].textContent=r.tg; c[4].textContent=r.cyc.toFixed(1)+"초"; c[5].textContent=pct(r.dps/tot*100);
+    tb.appendChild(tr);
+  });
+  const KO={Attack:"공격력",AttackPower:"공격력",FinalDamage:"최종 데미지",CriticalPower:"크리티컬 데미지",
+            CriticalChance:"크리티컬 확률",AttackSpeed:"공격 속도",MaxDamageRatio:"최대 데미지 배율",
+            MinDamageRatio:"최소 데미지 배율",SkillPower:"스킬 데미지",BaseAttackPower:"기본 공격 데미지",
+            AttackPowerToBoss:"보스 데미지",AttackPowerExcludeBoss:"일반 몬스터 데미지"};
+  const agg={};
+  sup.buffs.forEach(b=>{const k=KO[b.stat]; if(!k) return; agg[k]=(agg[k]||0)+b.val;});
+  const list=Object.entries(agg).sort((a,b)=>b[1]-a[1]);
+  if(list.length){
+    const d2=document.createElement("div"); d2.className="note ok";
+    d2.textContent="동료 버프 — "+list.map(([k,v])=>k+" +"+v.toFixed(1)+"%").join(" · ");
+    bb.appendChild(d2);
+  }
+}
+
+/* ---------- 동료 슬롯 · 피커 ---------- */
+/* 동료는 "직업 14종 x 등급 4단계" 다. 56개짜리 드롭다운 대신 슬롯을 먼저 고르고
+   그 슬롯에 직업 -> 등급 -> 레벨을 채우는 방식으로 만든다. 상태 모양(S.sup / S.supLv /
+   S.subs)은 그대로 둬서 저장된 세팅이 그대로 열린다. */
+const GRADES=["레어","에픽","유니크","레전드리"];
+const KO2JOB={}; DATA.jobs.forEach(j=>{KO2JOB[j.ko]=j.id;});
+const SUP_BY={};                                     // 직업명 -> 등급 -> 동료
+DATA.supporters.forEach(x=>{(SUP_BY[x.ko]=SUP_BY[x.ko]||{})[x.grade]=x;});
+const SUP_KOS=DATA.jobs.map(j=>j.ko).filter(k=>SUP_BY[k]);
+const supOf=code=>DATA.supporters.find(x=>x.code===code)||null;
+let pickT="main";                                    // 지금 고르는 슬롯: "main" | 0..5
+const slotOf=t=> t==="main" ? {code:S.sup, lv:S.supLv} : {code:S.subs[t].c, lv:S.subs[t].l};
+function setSlot(t,code,lv){
+  if(t==="main"){ S.sup=code||""; if(lv!=null) S.supLv=lv; }
+  else { S.subs[t].c=code||""; if(lv!=null) S.subs[t].l=lv; }
+}
+function supFace(sup,cls){
+  const ic=sup?SUPICONS[KO2JOB[sup.ko]]:null;
+  if(ic) return '<span class="'+cls+'"><img src="'+ic+'" alt="" loading="lazy" decoding="async"></span>';
+  if(sup) return '<span class="'+cls+'">'+jobGlyph(KO2JOB[sup.ko])+'</span>';
+  return '<span class="'+cls+' plus">+</span>';
+}
+function renderSupSlots(){
+  const box=$("#supSlots"); box.textContent="";
+  const tile=(k,label)=>{
+    const s=slotOf(k), sup=supOf(s.code);
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="supslot"+(k==="main"?" main":"")+(sup?"":" empty");
+    b.setAttribute("aria-current", String(k)===String(pickT)?"true":"false");
+    if(sup) b.dataset.grade=sup.grade;
+    b.title=(k==="main"?"메인":label)+(sup?(" · "+sup.ko+" "+sup.grade+" Lv"+s.lv):" · 비어 있음");
+    b.innerHTML=supFace(sup,"sface")+'<span class="sname"></span><span class="sgrade"></span>';
+    b.querySelector(".sname").textContent=sup?sup.ko:label;
+    b.querySelector(".sgrade").textContent=sup?(sup.grade+" · Lv"+s.lv):"비어 있음";
+    b.addEventListener("click",()=>{ pickT=k; renderSupSlots(); renderSupPick(); });
+    box.appendChild(b);
+  };
+  tile("main","메인");
+  for(let i=0;i<6;i++) tile(i,"서브 "+(i+1));
+}
+function renderSupPick(){
+  const s=slotOf(pickT), sup=supOf(s.code);
+  $("#pickWho").textContent = pickT==="main"
+    ? "메인 슬롯 — 소환돼서 직접 때립니다"
+    : ("서브 "+(pickT+1)+" 슬롯 — 장착 옵션만 줍니다");
+  $$("#supGrid .jobbtn").forEach(b=>
+    b.setAttribute("aria-checked", sup&&b.dataset.ko===sup.ko?"true":"false"));
+  $$("#gradeSegs .seg").forEach(b=>{
+    b.setAttribute("aria-pressed", sup&&b.dataset.g===sup.grade?"true":"false");
+    b.disabled = !sup || !SUP_BY[sup.ko][b.dataset.g];
+  });
+  const li=$("#supLv");
+  li.value=s.lv; li.max=sup?capOf(sup.grade):300; li.disabled=!sup;
+  $("#pickCap").textContent=sup?("만렙 Lv"+capOf(sup.grade)):"직업을 고르세요";
+  $("#pickClear").disabled=!sup;
+}
+function afterSup(){ renderSupSlots(); renderSupPick(); recompute(); }
+(function(){
+  const grid=$("#supGrid");
+  SUP_KOS.forEach(ko=>{
+    const j=DATA.jobs.find(x=>x.ko===ko);
+    const b=document.createElement("button");
+    b.type="button"; b.className="jobbtn"; b.dataset.ko=ko; b.dataset.fam=j?j.fam:"";
+    b.setAttribute("role","radio"); b.setAttribute("aria-checked","false"); b.title=ko;
+    const any=SUP_BY[ko]["레전드리"]||SUP_BY[ko][Object.keys(SUP_BY[ko])[0]];
+    b.innerHTML=supFace(any,"jface")+'<span class="jname"></span>';
+    b.querySelector(".jname").textContent=ko;
+    b.addEventListener("click",()=>{
+      const cur=supOf(slotOf(pickT).code);
+      const g=(cur&&SUP_BY[ko][cur.grade])?cur.grade:"레전드리";
+      const x=SUP_BY[ko][g]; if(!x) return;
+      setSlot(pickT,x.code,clamp(slotOf(pickT).lv,1,capOf(g)));
+      afterSup();
+    });
+    grid.appendChild(b);
+  });
+  const gs=$("#gradeSegs");
+  GRADES.forEach(g=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="seg grade"; b.dataset.g=g; b.textContent=g;
+    b.setAttribute("aria-pressed","false"); b.disabled=true;
+    b.addEventListener("click",()=>{
+      const cur=supOf(slotOf(pickT).code); if(!cur) return;
+      const x=SUP_BY[cur.ko][g]; if(!x) return;
+      setSlot(pickT,x.code,clamp(slotOf(pickT).lv,1,capOf(g)));
+      afterSup();
+    });
+    gs.appendChild(b);
+  });
+  $("#pickClear").addEventListener("click",()=>{ setSlot(pickT,"",1); afterSup(); });
+  $("#supLv").addEventListener("input",e=>{
+    const cur=supOf(slotOf(pickT).code); if(!cur) return;
+    const v=parseInt(e.target.value,10);
+    const lv=isFinite(v)?clamp(v,1,capOf(cur.grade)):1;
+    setSlot(pickT,cur.code,lv);
+    if(lv!==v) e.target.value=lv;
+    afterSup();
+  });
+})();
+
+function subSummary(){
+  const box=$("#subSum"); box.textContent="";
+  const agg={};
+  let n=0;
+  S.subs.forEach(slot=>{
+    if(!slot.c) return;
+    const sup=DATA.supporters.find(x=>x.code===slot.c);
+    if(!sup) return;
+    n++;
+    (sup.opts||[]).filter(o=>o.grp==="장착").forEach(o=>{
+      const k=OPT_KO[o.stat]||o.stat;
+      agg[k]=(agg[k]||0)+optValue(o,slot.l);
+    });
+  });
+  const main=curSup();
+  if(main){
+    (main.opts||[]).filter(o=>o.grp==="장착").forEach(o=>{
+      const k=OPT_KO[o.stat]||o.stat;
+      agg[k]=(agg[k]||0)+optValue(o,S.supLv);
+    });
+  }
+  const list=Object.entries(agg).sort((a,b)=>b[1]-a[1]);
+  if(!list.length){
+    const d=document.createElement("div"); d.className="note neutral";
+    d.textContent="서브 슬롯을 채우면 장착 옵션 기여분을 분해해서 보여줍니다.";
+    box.appendChild(d); return;
+  }
+  const d=document.createElement("div"); d.className="note ok";
+  d.textContent="장착 옵션 합계 ("+(n+(main?1:0))+"슬롯) — "
+    +list.map(([k,v])=>k+" +"+(v>=100?v.toFixed(0):v.toFixed(1))+((k.includes("고정")||k==="명중")?"":"%")).join(" · ");
+  box.appendChild(d);
+  const own={};
+  [main].concat(S.subs.map(s=>DATA.supporters.find(x=>x.code===s.c)))
+    .forEach((sup,idx)=>{
+      if(!sup) return;
+      const lv=idx===0?S.supLv:S.subs[idx-1].l;
+      (sup.opts||[]).filter(o=>o.grp==="보유").forEach(o=>{
+        const k=OPT_KO[o.stat]||o.stat;
+        own[k]=(own[k]||0)+optValue(o,lv);
+      });
+    });
+  const ol=Object.entries(own).sort((a,b)=>b[1]-a[1]);
+  if(ol.length){
+    const d2=document.createElement("div"); d2.className="note neutral";
+    d2.textContent="보유 옵션 (소유만으로 적용) — "
+      +ol.map(([k,v])=>k+" +"+(v>=100?v.toFixed(0):v.toFixed(1))
+        +((k.includes("고정")||k==="명중")?"":"%")).join(" · ");
+    box.appendChild(d2);
+  }
+}
+
+/* ---------- 투자 추천 ---------- */
+/* 등급별 만렙 — SupporterLevelUpCostTable.MaxLevel. 게임 내 값과 일치 확인됨. */
+const SUP_CAP={'노말':100,'레어':50,'에픽':30,'유니크':10,'레전드리':16};
+function capOf(grade){ return SUP_CAP[grade]||16; }
+function supLvOf(grade){ return clamp(S.supLv||1, 1, capOf(grade)); }
+function recommend(st,V,job,lv){
+  const cur=curSup();
+  /* 메인 동료 교체 비교 */
+  const tb=$("#recMain"); tb.textContent="";
+  if(!(V.atk>0)){
+    const tr=document.createElement("tr");
+    tr.innerHTML='<td colspan="6" style="color:var(--ink-3);font-size:12.5px">스탯을 입력하면 동료별 기여를 비교합니다.</td>';
+    tb.appendChild(tr);
+  }else{
+    const own=x=>{
+      const B=applySupBuffs(V,x,supLvOf(x.grade));
+      return rotation(job,st,B,lv,false).reduce((a,r)=>a+r.dps,0)*S.R*B.extra
+             + supDps(x,st,B,supLvOf(x.grade));
+    };
+    const ownMax=x=>{
+      const mx=capOf(x.grade), B=applySupBuffs(V,x,mx);
+      return rotation(job,st,B,lv,false).reduce((a,r)=>a+r.dps,0)*S.R*B.extra
+             + supDps(x,st,B,mx);
+    };
+    const base=cur?own(cur):rotation(job,st,V,lv,false).reduce((a,r)=>a+r.dps,0)*S.R*V.extra;
+    const rows=DATA.supporters.map(x=>({x,now:own(x),max:ownMax(x)}))
+      .sort((a,b)=>b.max-a.max).slice(0,8);
+    rows.forEach(r=>{
+      const tr=document.createElement("tr");
+      const mine=cur&&cur.code===r.x.code;
+      if(mine) tr.style.background="var(--accent-soft)";
+      tr.innerHTML='<td></td><td></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td>';
+      const c=tr.children;
+      c[0].textContent=r.x.ko+(mine?" (현재)":"");
+      c[1].textContent=r.x.grade;
+      c[2].textContent="Lv"+capOf(r.x.grade);
+      c[3].textContent=fmt(r.now); c[4].textContent=fmt(r.max);
+      const g=base>0? r.max/base : 0;
+      c[5].textContent="×"+g.toFixed(2);
+      c[5].style.color = g>=1.15?"var(--pass)" : g<0.95?"var(--ink-3)":"var(--ink-2)";
+      tb.appendChild(tr);
+    });
+  }
+
+  /* 동료 레벨업 효과 */
+  const lb=$("#recLevel"); lb.textContent="";
+  if(cur&&V.atk>0){
+    const mx=capOf(cur.grade), B=applySupBuffs(V,cur,S.supLv);
+    const now=supDps(cur,st,B,S.supLv);
+    const nxt=supDps(cur,st,B,Math.min(S.supLv+1,mx));
+    const top=supDps(cur,st,B,mx);
+    const d=document.createElement("div"); d.className=S.supLv>=mx?"note ok":"note neutral";
+    d.textContent = S.supLv>=mx
+      ? cur.ko+" "+cur.grade+" 는 Lv"+mx+" 만렙입니다. 더 올릴 수 없습니다."
+      : cur.ko+" "+cur.grade+" Lv"+S.supLv+" → Lv"+(S.supLv+1)+" : 동료 초당 피해 "
+        +fmt(now)+" → "+fmt(nxt)+" ("+pct((nxt/now-1)*100)+")"
+        +" · 만렙 Lv"+mx+" 까지 "+pct((top/now-1)*100)+" 상승";
+    lb.appendChild(d);
+    const inh=inheritRate(cur,S.supLv), inhMax=inheritRate(cur,mx);
+    const d2=document.createElement("div"); d2.className="note neutral";
+    d2.textContent="공격력 계승률 "+pct(inh*100,0)+" → 만렙 "+pct(inhMax*100,0)
+      +(inh>=0.9?" (이미 상한 90% 도달 — 레벨업의 계승 효과는 없고 장착 옵션만 오릅니다)":"");
+    lb.appendChild(d2);
+    const eq=(cur.opts||[]).filter(o=>o.grp==="장착");
+    if(eq.length){
+      const d3=document.createElement("div"); d3.className="note neutral";
+      d3.textContent="장착 옵션 "+eq.map(o=>(OPT_KO[o.stat]||o.stat)+" "
+        +optValue(o,S.supLv).toFixed(1)+" → "+optValue(o,mx).toFixed(1)).join(" · ");
+      lb.appendChild(d3);
+    }
+  }else{
+    const d=document.createElement("div"); d.className="note neutral";
+    d.textContent="메인 동료를 선택하면 레벨업 효과를 계산합니다.";
+    lb.appendChild(d);
+  }
+
+  /* 스타포스 */
+  const sb=$("#recStar"); sb.textContent="";
+  DATA.starforce.forEach(x=>{
+    if(x.sf===0) return;
+    const tr=document.createElement("tr");
+    tr.innerHTML='<td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td>';
+    const c=tr.children;
+    const scroll=(x.cost.find(v=>v[0]==="SCROLL_STARFORCE")||[,0])[1];
+    const tries=x.ok>0? 100/x.ok : 0;
+    c[0].textContent="★"+x.sf;
+    c[1].textContent="+"+x.main.toFixed(0)+"%";
+    c[2].textContent=x.sub? "+"+x.sub.toFixed(0)+"%" : "—";
+    c[3].textContent=x.ok? x.ok.toFixed(0)+"%" : "—";
+    c[4].textContent=x.down? x.down.toFixed(0)+"%" : "—";
+    c[5].textContent=x.boom? x.boom.toFixed(0)+"%" : "—";
+    c[5].style.color=x.boom?"var(--fail)":"";
+    c[6].textContent=tries? int(scroll*tries)+"장" : "—";
+    sb.appendChild(tr);
+  });
+
+  /* 큐브 */
+  const cb=$("#recCube"); cb.textContent="";
+  const GK={Grade1:"노말",Grade2:"레어",Grade3:"에픽",Grade4:"유니크",Grade5:"레전드리",Grade6:"미스틱"};
+  const PK={Cap:"모자",Mail:"상의",Pants:"하의",Shoes:"신발",Glove:"장갑",Cape:"망토",
+            Weapon:"무기",Shield:"보조",Belt:"벨트",Ring:"반지",Pendant:"펜던트",Earring:"귀걸이",
+            Shoulder:"어깨",Face:"얼굴장식",Eye:"눈장식",Emblem:"엠블럼"};
+  const seen={};
+  DATA.cube.forEach(x=>{
+    const k=x.grade;
+    if(seen[k]) return;
+    seen[k]=1;
+    const tr=document.createElement("tr");
+    tr.innerHTML='<td></td><td></td><td class="n"></td><td class="n"></td><td class="n"></td>';
+    const c=tr.children;
+    const cube=(x.cost.find(v=>v[0]==="MIRACLE_CUBE")||[,0])[1];
+    const exp=x.prob>0? Math.min(100/x.prob, x.pity||Infinity) : (x.pity||0);
+    c[0].textContent="공통";
+    c[1].textContent=(GK[x.grade]||x.grade)+" → "+(GK[x.next]||x.next||"—");
+    c[2].textContent=x.prob? x.prob.toFixed(1)+"%" : "—";
+    c[3].textContent=x.pity? x.pity+"회" : "—";
+    c[4].textContent=exp&&isFinite(exp)? int(exp*cube)+"개" : "—";
+    cb.appendChild(tr);
+  });
+}
+
+/* ---------- 차트 ---------- */
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function draw(){
+  const st=S.stage; if(!st) return;
+  const W=320,H=132,PB=18,PT=8;
+  const ac=css("--accent"),cl=css("--clay"),ln=css("--line-2"),i3=css("--ink-3");
+  const pts=[]; for(let g=0;g<=100;g++) pts.push([g/100*W,H-PB-(evadePct(g)/70)*(H-PB-PT)]);
+  const d=pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
+  const gap=Math.max(st.ev-S.acc,0);
+  const mx=clamp(gap,0,100)/100*W, my=H-PB-(evadePct(gap)/70)*(H-PB-PT);
+  $("#accChart").innerHTML=
+    '<line x1="0" y1="'+(H-PB)+'" x2="'+W+'" y2="'+(H-PB)+'" stroke="'+ln+'" stroke-width="1" vector-effect="non-scaling-stroke"/>'
+   +'<path d="'+d+' L '+W+' '+(H-PB)+' L 0 '+(H-PB)+' Z" fill="'+ac+'" opacity=".10"/>'
+   +'<path d="'+d+'" fill="none" stroke="'+ac+'" stroke-width="2" vector-effect="non-scaling-stroke"/>'
+   +'<line x1="'+mx+'" y1="'+PT+'" x2="'+mx+'" y2="'+(H-PB)+'" stroke="'+cl+'" stroke-width="1.5" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>'
+   +'<circle cx="'+mx+'" cy="'+my+'" r="4" fill="'+cl+'"/>'
+   +'<text x="2" y="'+(H-5)+'" font-size="9" fill="'+i3+'" font-family="IBM Plex Mono, monospace">격차 0</text>'
+   +'<text x="'+(W-2)+'" y="'+(H-5)+'" font-size="9" text-anchor="end" fill="'+i3+'" font-family="IBM Plex Mono, monospace">100 (회피 70% 상한)</text>';
+  const b0=5000/(st.df+6000), bmax=5000/6000, p2=[];
+  for(let i=0;i<=100;i++){ const m=5000/(st.df*(1-i/100)+6000);
+    p2.push([i/100*W,H-PB-((m-b0)/(bmax-b0||1))*(H-PB-PT)]); }
+  const d2=p2.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
+  const px=clamp(S.pierce,0,100)/100*W;
+  const pm=5000/(st.df*(1-clamp(S.pierce,0,100)/100)+6000);
+  const py=H-PB-((pm-b0)/(bmax-b0||1))*(H-PB-PT);
+  $("#defChart").innerHTML=
+    '<line x1="0" y1="'+(H-PB)+'" x2="'+W+'" y2="'+(H-PB)+'" stroke="'+ln+'" stroke-width="1" vector-effect="non-scaling-stroke"/>'
+   +'<path d="'+d2+' L '+W+' '+(H-PB)+' L 0 '+(H-PB)+' Z" fill="'+cl+'" opacity=".10"/>'
+   +'<path d="'+d2+'" fill="none" stroke="'+cl+'" stroke-width="2" vector-effect="non-scaling-stroke"/>'
+   +'<line x1="'+px+'" y1="'+PT+'" x2="'+px+'" y2="'+(H-PB)+'" stroke="'+ac+'" stroke-width="1.5" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>'
+   +'<circle cx="'+px+'" cy="'+py+'" r="4" fill="'+ac+'"/>'
+   +'<text x="2" y="'+(H-5)+'" font-size="9" fill="'+i3+'" font-family="IBM Plex Mono, monospace">방관 0%</text>'
+   +'<text x="'+(W-2)+'" y="'+(H-5)+'" font-size="9" text-anchor="end" fill="'+i3+'" font-family="IBM Plex Mono, monospace">100% (배율 0.833)</text>';
+}
+
+/* ---------- 프리셋 (브라우저 저장) ---------- */
+const PKEY="sg-presets", LKEY="sg-last";
+function readPresets(){
+  try{ return JSON.parse(localStorage.getItem(PKEY)||"{}"); }catch(e){ return {}; }
+}
+function writePresets(o){
+  try{ localStorage.setItem(PKEY, JSON.stringify(o)); return true; }catch(e){ return false; }
+}
+function snapshot(){
+  return {v:1, job:S.job, R:S.R, acc:S.acc, pierce:S.pierce,
+          st:Object.assign({},S.st), cp:Object.assign({},S.cp),
+          sup:S.sup, supLv:S.supLv, subs:S.subs.map(x=>({c:x.c,l:x.l})),
+          stage:S.stage?{id:S.stage.id,mode:S.stage.mode}:null};
+}
+function restore(p){
+  if(!p) return;
+  if(p.job){ S.job=p.job;
+    $$("#jobGrid .jobbtn").forEach(b=>b.setAttribute("aria-checked",b.dataset.id===p.job?"true":"false")); }
+  if(typeof p.R==="number"){ S.R=p.R; $("#rIn").value=p.R.toFixed(2); $("#rRange").value=clamp(p.R,0.5,8); }
+  ["st","cp"].forEach(k=>{
+    Object.entries(p[k]||{}).forEach(([f,v])=>{
+      S[k][f]=v; const e=$((k==="st"?"#in-":"#cp-")+f); if(e) e.value=v;
+    });
+  });
+  if(p.acc!=null){ S.acc=p.acc; $("#in-acc").value=p.acc; }
+  if(p.pierce!=null){ S.pierce=p.pierce; $("#in-pierce").value=p.pierce; }
+  S.sup=p.sup||""; S.supLv=p.supLv||1;
+  (p.subs||[]).forEach((x,i)=>{
+    if(!S.subs[i]) return;
+    S.subs[i].c=x.c||""; S.subs[i].l=x.l||1;
+  });
+  renderSupSlots(); renderSupPick();
+  if(p.stage){
+    const st=DATA.stages.find(x=>x.id===p.stage.id&&x.mode===p.stage.mode);
+    if(st){ S.mode=st.mode; S.ch="ch:"+st.ch;
+      $$("#modeSegs .seg").forEach(b=>b.setAttribute("aria-pressed", b.dataset.mode===st.mode?"true":"false"));
+      $("#chSel").value=S.ch; renderList(); select(st); return; }
+  }
+  recompute();
+}
+function renderPresets(){
+  const box=$("#presetList"); box.textContent="";
+  const all=readPresets(), keys=Object.keys(all);
+  let last=null; try{ last=localStorage.getItem(LKEY); }catch(e){}
+  if(!keys.length){
+    const e=document.createElement("span");
+    e.style.cssText="font-size:11.5px;color:var(--ink-3)";
+    e.textContent="저장된 세팅이 없습니다.";
+    box.appendChild(e); return;
+  }
+  keys.sort().forEach(k=>{
+    const c=document.createElement("span"); c.className="pchip";
+    c.setAttribute("aria-current", k===last?"true":"false");
+    c.innerHTML='<b></b><span class="x" title="삭제">×</span>';
+    c.querySelector("b").textContent=k;
+    c.querySelector("b").addEventListener("click",()=>{
+      restore(all[k]);
+      try{ localStorage.setItem(LKEY,k); }catch(e){}
+      $("#presetName").value=k;
+      renderPresets();
+    });
+    c.querySelector(".x").addEventListener("click",ev=>{
+      ev.stopPropagation();
+      const o=readPresets(); delete o[k]; writePresets(o);
+      try{ if(localStorage.getItem(LKEY)===k) localStorage.removeItem(LKEY); }catch(e){}
+      renderPresets();
+    });
+    box.appendChild(c);
+  });
+}
+$("#presetSave").addEventListener("click",()=>{
+  const nm=($("#presetName").value||"").trim() || ("세팅 "+(Object.keys(readPresets()).length+1));
+  const all=readPresets(); all[nm]=snapshot();
+  const ok=writePresets(all);
+  try{ if(ok) localStorage.setItem(LKEY,nm); }catch(e){}
+  $("#presetName").value=nm;
+  renderPresets();
+  const hint=$("#presetList");
+  if(!ok){
+    const e=document.createElement("span");
+    e.style.cssText="font-size:11.5px;color:var(--fail)";
+    e.textContent="이 브라우저에서는 저장할 수 없습니다 (개인정보 보호 모드 등).";
+    hint.appendChild(e);
+  }
+});
+$("#presetName").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#presetSave").click(); });
+
+
+/* ---------- 탭 ---------- */
+const TABS=["home","stage","sup","mon","enh"];
+let TAB="home";
+function showTab(id,push){
+  if(TABS.indexOf(id)<0) id="home";
+  TAB=id;
+  TABS.forEach(k=>{ const el=$("#p-"+k); if(el) el.hidden = k!==id; });
+  $$("#tabs .tab").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===id?"true":"false"));
+  if(push!==false){ try{ history.replaceState(null,"","#"+id); }catch(e){} }
+  if(id==="home"){ home(); loadRanking(); loadNotices(); }
+  if(id==="sup") supDex();
+  if(id==="stage"){ stageInsights(); meBar(); }
+  try{ window.scrollTo(0,0); }catch(e){}
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest(".rmore"); if(b) showTab(b.dataset.go);
+});
+$("#tabs").addEventListener("click",e=>{
+  const b=e.target.closest(".tab"); if(b) showTab(b.dataset.tab);
+});
+window.addEventListener("hashchange",()=>showTab((location.hash||"#home").slice(1),false));
+
+/* ---------- 공통 조각 ---------- */
+const icoImg=(src,cls)=>src
+  ? '<span class="'+cls+'"><img src="'+src+'" alt="" loading="lazy" decoding="async"></span>'
+  : '<span class="'+cls+'"></span>';
+const monIco=m=>DEXICONS.mon[m.ci]||"";
+const supIco=sup=>sup?SUPICONS[KO2JOB[sup.ko]]:"";
+const rngTxt=(a,f)=>a.length<2?f(a[0]):f(a[0])+" ~ "+f(a[1]);
+/* 기준 스테이지.
+   홈 랭킹은 "지금 막힌 관문" 에서 재는 게 의미가 있다 — 이미 100% 로 깨는 스테이지에서
+   동료를 비교하면 전부 100% 라 순위가 안 갈린다. progress() 가 WALL 을 채운다. */
+let WALL=null;
+function refStage(){
+  if(TAB==="home"&&WALL) return WALL;
+  if(S.stage&&S.stage.camps&&S.stage.camps.length) return S.stage;
+  return DATA.stages.find(s=>s.mode==="돌파"&&s.camps&&s.camps.length)||null;
+}
+function ready(){ return vec().atk>0; }
+
+/* ---------- 내 세팅 요약 바 ---------- */
+function meBar(){
+  const box=$("#meBar"); if(!box) return;
+  const job=curJob(), sup=curSup(), V=vec();
+  box.textContent="";
+  const wrap=document.createElement("div");
+  wrap.style.cssText="display:flex;align-items:center;gap:12px;flex-wrap:wrap;width:100%";
+  const cp=ready()?fmt(combatPower(cpVec())):"—";
+  wrap.innerHTML=icoImg(ICONS[job.id],"mi")
+    +'<div><div class="mt"></div><div class="ms"></div></div>'
+    +'<div class="grow"><button class="seg" type="button" id="meEdit">스탯 수정</button></div>';
+  wrap.querySelector(".mt").textContent=job.ko+" · 전투력 "+cp;
+  wrap.querySelector(".ms").textContent=(sup?("동료 "+sup.ko+" "+sup.grade+" Lv"+S.supLv):"동료 없음")
+    +" · 로테이션 효율 R "+S.R.toFixed(2);
+  box.appendChild(wrap);
+  $("#meEdit").addEventListener("click",()=>{
+    showTab("home");
+    const c=$("#statInputs"); if(c&&c.scrollIntoView) c.scrollIntoView({block:"center"});
+  });
+}
+
+/* ---------- 홈 ---------- */
+$("#statline").innerHTML=
+  '게임 클라이언트 원본 데이터로 계산합니다 · 스테이지 '
+  +DATA.meta.stages.toLocaleString("ko-KR")+' · 몬스터 '+DEX.monsters.length
+  +' · 동료 '+DATA.supporters.length+' · 유물 '+DEX.artifacts.length;
+
+function rrow(box,i,ico,title,desc,val,frac,click,me){
+  const w=document.createElement("div");
+  w.className="rrow"+(i<3?" top"+(i+1):"")+(click?" clickable":"");
+  if(me) w.dataset.me="1";
+  w.innerHTML='<span class="rn"></span>'+icoImg(ico,"ri")
+    +'<div><div class="rt"></div><div class="rd"></div></div>'
+    +'<div class="rb"><i></i></div><div class="rv"></div>';
+  w.querySelector(".rn").textContent=i+1;
+  w.querySelector(".rt").textContent=title;
+  w.querySelector(".rd").textContent=desc;
+  w.querySelector(".rv").textContent=val;
+  w.querySelector(".rb i").style.width=Math.max(frac*100,2).toFixed(1)+"%";
+  if(click) w.addEventListener("click",click);
+  box.appendChild(w);
+}
+const rempty=(box,msg)=>{ const d=document.createElement("div");
+  d.className="rempty"; d.textContent=msg; box.appendChild(d); };
+
+/* 큰 신호등 결과 (홈 히어로) */
+
+function bigResultEmpty(){
+  const box=$("#bigResult"); box.innerHTML=
+    '<div class="brempty"><div class="bricon">🎯</div>'
+    +'<div class="brmsg">스탯을 넣으면 여기에 <b>어디까지 깰 수 있는지</b> 크게 뜹니다.<br>'
+    +'처음이면 예시로 먼저 눌러 보세요.</div>'
+    +'<div class="brbtns">'
+    +'<button class="btn xl primary" type="button" id="brFill">예시로 먼저 보기</button>'
+    +'<button class="btn xl" type="button" id="brEdit">내 스탯 넣기</button>'
+    +'</div></div>';
+  $("#brFill").addEventListener("click",()=>$("#fillTypical").click());
+  $("#brEdit").addEventListener("click",()=>{const c=$("#statInputs");
+    if(c&&c.scrollIntoView) c.scrollIntoView({block:"center",behavior:"smooth"});
+    const f=$("#in-atk"); if(f) f.focus();});
+}
+function bigResultReady(rows,last,wall){
+  const box=$("#bigResult");
+  const kind = last<0 ? "no" : "ok";   // 뭐라도 깨면 초록, 다음 관문은 작은 글씨로만
+  const lastId = last>=0 ? rows[last].s.id : null;
+  let big, small;
+  if(last<0){ big="아직 안정적으로 깨는 돌파가 없어요"; small="공격력과 명중부터 올려보세요."; }
+  else if(wall){ big="<b>"+lastId+"</b> 까지 깰 수 있어요";
+    const wp=Math.round(wall.p*100);
+    small="다음 <b>"+wall.s.id+"</b> 은 "+(wp>=50?"해볼 만해요":wp>=20?"아슬아슬해요":"아직 어려워요")+" · "+wp+"%"; }
+  else { big="<b>"+lastId+"</b> 까지 다 깼어요"; small="여기가 지금 마지막 돌파예요."; }
+
+  let html='<div class="brsignal '+kind+'"><span class="sigdot brdot '+kind+'"></span>'
+    +'<div class="brmain"><div class="brbig">'+big+'</div><div class="brsmall">'+small+'</div></div>'
+    +'<button class="btn" type="button" id="brDetail">스테이지 자세히</button></div>';
+  // 가까운 스테이지 신호등 칩
+  const lo=Math.max(0,(last<0?0:last)-2), hi=Math.min(rows.length,(last<0?0:last)+5);
+  html+='<div class="brchips">';
+  rows.slice(lo,hi).forEach((r,i)=>{
+    const p=r.p*100, k=p>=85?"ok":p>=25?"edge":"no";
+    html+='<button class="brchip '+k+(lo+i===last?" here":"")+'" type="button" data-idx="'+(lo+i)+'">'
+      +'<span class="sigdot bcs '+k+'"></span><span class="bcid">'+r.s.id+'</span>'
+      +'<span class="bcp">'+Math.round(p)+'%</span></button>';
+  });
+  html+='</div>';
+  box.innerHTML=html;
+  const goStage=s=>gotoStage(s);
+  const dt=$("#brDetail"); if(dt) dt.addEventListener("click",()=>goStage((wall||rows[Math.max(last,0)]).s));
+  $$("#bigResult .brchip").forEach(c=>c.addEventListener("click",()=>{
+    const r=rows[+c.dataset.idx]; if(r) goStage(r.s);
+  }));
+}
+function heroCard(){}   // 옛 패널 제거 — 큰 결과가 대체
+
+/* 스탯을 아직 안 넣었을 때 쓰는 기준 벡터.
+   S 를 건드리지 않고 계산에만 쓴다 — 랭킹을 빈 채로 두면 "랭킹이 안 된다"로 보인다.
+   순위 자체는 동료·직업 고유 성능이 대부분을 결정해서 기준 스탯이 달라져도 거의 안 바뀐다. */
+function baseVec(){
+  return Object.assign({},TYP,{acc:385,pierce:54.5,aspd:TYPCP.aspd,
+    cdsec:TYPCP.cdsec,btgt:TYPCP.btgt,extra:1});
+}
+const baseLv=()=>({1:TYPCP.sk1,2:TYPCP.sk2,3:TYPCP.sk3,4:TYPCP.sk4,all:TYPCP.skAll});
+const baseSup=()=>DATA.supporters.find(x=>x.code===TYPSUP.main)||null;
+/* 지금 화면에 쓸 계산 기준. demo=true 면 예시 계정 기준이라는 뜻 */
+function basis(){
+  return ready()
+    ? {V:vec(), lv:lvOf(), sup:curSup(), supLv:S.supLv, job:curJob(), demo:false}
+    : {V:baseVec(), lv:baseLv(), sup:baseSup(), supLv:TYPSUP.mainLv, job:curJob(), demo:true};
+}
+
+/* 지금 스탯으로 어디까지 깨지나 — 돌파 전체를 훑어 마지막 통과 지점을 찾는다 */
+function progress(){
+  const box=$("#progBody"), hint=$("#progHint");
+  box.textContent="";
+  const bars=[];   // 옛 히어로 막대 제거됨
+  WALL=null;
+  if(!ready()){
+    hint.textContent="스탯 입력 전";
+    bars.forEach(b=>b.style.width="0");
+    bigResultEmpty();
+    const d=document.createElement("div"); d.className="rempty";
+    d.textContent="스탯을 넣으면 여기에 가까운 스테이지별 확률이 표로 나옵니다.";
+    box.appendChild(d);
+    return; }
+  const job=curJob(), V=vec(), lv=lvOf(), sup=curSup();
+  const rush=DATA.stages.filter(s=>s.mode==="돌파"&&s.camps&&s.camps.length)
+                        .sort((a,b)=>a.ch-b.ch||a.dg-b.dg);
+  const rows=rush.map(s=>({s:s, p:clearProb(job,s,V,lv,S.R,0,sup,S.supLv).p}));
+  let last=-1;
+  rows.forEach((r,i)=>{ if(r.p>=0.85) last=i; });
+  const nOk=rows.filter(r=>r.p>=0.85).length, nEdge=rows.filter(r=>r.p>=0.25&&r.p<0.85).length;
+  const nNo=rows.length-nOk-nEdge;
+  hint.textContent="돌파 "+rows.length+"개 검사";
+  const wall=last>=0&&last+1<rows.length?rows[last+1]:null;
+  WALL=wall?wall.s:(rows[last]?rows[last].s:null);
+  bigResultReady(rows,last,wall);
+
+  const head=document.createElement("div");
+  head.className="proghead";
+  head.innerHTML = last<0
+    ? "지금 스탯으로는 <b>첫 돌파도 85% 를 못 넘깁니다.</b> 공격력과 명중부터 보세요."
+    : "안정적으로 깨는 마지막 돌파는 <b>"+rows[last].s.id+"</b>"
+      +(wall?(", 그 다음 <b>"+wall.s.id+"</b> 에서 "+pct(wall.p*100,0)+" 로 막힙니다."):" 입니다.");
+  box.appendChild(head);
+
+  const lo=Math.max(0,(last<0?0:last)-2), hi=Math.min(rows.length,(last<0?0:last)+5);
+  const list=document.createElement("div");
+  list.className="proglist";
+  rows.slice(lo,hi).forEach((r,i)=>{
+    const p=r.p*100, k=p>=85?"ok":p>=25?"edge":"no";
+    const w=document.createElement("div");
+    w.className="progrow "+k+(lo+i===last?" here":"");
+    w.innerHTML='<span class="pid"></span><span class="pp"></span><span class="pd"></span>';
+    w.querySelector(".pid").textContent=r.s.id;
+    w.querySelector(".pp").textContent=Math.round(p)+"%";
+    w.querySelector(".pd").textContent="HP "+fmt(r.s.hp);
+    w.title=r.s.id+" · 클리어 확률 "+pct(p,0);
+    w.addEventListener("click",()=>gotoStage(r.s));
+    list.appendChild(w);
+  });
+  box.appendChild(list);
+}
+
+/* 동료 티어 — 기준 스테이지에서 만렙으로 세웠을 때 초당 피해 */
+function supTier(limit){
+  const st=refStage(); if(!st) return null;
+  const B=basis(), job=B.job, V=B.V, lv=B.lv;
+  const rows=DATA.supporters.map(x=>{
+    const B=applySupBuffs(V,x,capOf(x.grade));
+    const d=rotation(job,st,B,lv,false).reduce((a,r)=>a+r.dps,0)*S.R*B.extra
+            + supDps(x,st,B,capOf(x.grade));
+    return {x:x, d:d};
+  }).sort((a,b)=>b.d-a.d);
+  return limit?rows.slice(0,limit):rows;
+}
+function tierCard(){
+  const box=$("#tierList"), where=$("#tierWhere");
+  box.textContent="";
+  const st=refStage();
+  where.textContent=(st?("기준 "+st.id):"—")+(ready()?"":" · 예시 스탯");
+  const rows=supTier(6);
+  if(!rows){ rempty(box,"스테이지 데이터를 불러오지 못했습니다."); return; }
+  const mx=rows[0].d||1, cur=curSup();
+  rows.forEach((r,i)=>rrow(box,i,supIco(r.x),r.x.ko+" "+r.x.grade,
+    "만렙 Lv"+capOf(r.x.grade)+" 기준"+(cur&&cur.code===r.x.code?" · 지금 쓰는 중":""),
+    fmt(r.d), r.d/mx, ()=>showTab("sup"), cur&&cur.code===r.x.code));
+}
+
+/* 직업별 초당 피해 — 내 스탯을 그대로 다른 직업에 얹었다면 */
+function jobRankCard(){
+  const box=$("#jobRank"); box.textContent="";
+  const st=refStage();
+  if(!st){ rempty(box,"스테이지 데이터를 불러오지 못했습니다."); return; }
+  const B=basis(), V=B.V, lv=B.lv, sup=B.sup;
+  const rows=DATA.jobs.map(j=>({j:j, d:dps(j,st,V,lv,S.R,false,sup,B.supLv)}))
+                      .sort((a,b)=>b.d-a.d);
+  const mx=rows[0].d||1;
+  const mine=rows.findIndex(r=>r.j.id===S.job);
+  const show=rows.slice(0,6);
+  if(mine>=6) show.push(rows[mine]);                 // 내 직업은 순위 밖이어도 보여준다
+  show.forEach(r=>{
+    const i=rows.indexOf(r);
+    rrow(box,i,ICONS[r.j.id],r.j.ko,
+      r.j.fam+" · 주스탯 "+r.j.main+(r.j.id===S.job?" · 내 직업":""),
+      fmt(r.d), r.d/mx, ()=>{ setJob(r.j.id); }, r.j.id===S.job);
+  });
+}
+
+/* 가장 빡센 돌파 — 필요 초당 피해(총 HP / 가용 시간) 기준. 스탯이 없어도 나온다. */
+let HARD=null;
+function hardCard(){
+  const box=$("#hardList"); box.textContent="";
+  if(!HARD){
+    HARD=DATA.stages.filter(s=>s.mode==="돌파"&&s.camps&&s.camps.length)
+      .map(s=>({s:s, need:s.hp/availableS(s)}))
+      .sort((a,b)=>b.need-a.need).slice(0,6);
+  }
+  const mx=HARD[0]?HARD[0].need:1;
+  HARD.forEach((r,i)=>rrow(box,i,"",r.s.id,
+    "총 HP "+fmt(r.s.hp)+" · 가용 "+availableS(r.s).toFixed(0)+"초 · 회피 "+int(r.s.ev),
+    fmt(r.need)+"/s", r.need/mx, ()=>gotoStage(r.s)));
+}
+function home(){ top3Card(); homeNews(); }
+function stageInsights(){ progress(); tierCard(); jobRankCard(); hardCard(); }
+
+/* 유저 랭킹 — 정적 호스팅에서만 뜬다.
+   아티팩트는 외부는 물론 자기 데이터 파일도 못 부르므로 fetch 가 실패하고,
+   그때는 등록형 보드 안내가 그대로 남는다. */
+let RANK=null;
+/* 직업 한글명 -> 아이콘 (랭킹 job 필드가 한글이라 매칭) */
+const KO2ID={}; DATA.jobs.forEach(j=>{KO2ID[j.ko]=j.id;});
+function rankIcon(job){ const id=KO2ID[job]; return id?ICONS[id]:""; }
+
+function top3Card(){
+  const box=$("#top3"); if(!box) return;
+  box.textContent="";
+  if(!RANK||!RANK.rows||!RANK.rows.length){
+    box.className="rankempty";
+    box.textContent="랭킹은 배포된 사이트에서 보입니다. (여기 미리보기에선 데이터를 못 불러옵니다.)";
+    return;
+  }
+  box.className="top3";
+  const medal=["🥇","🥈","🥉"];
+  RANK.rows.slice(0,3).forEach((r,i)=>{
+    const ic=rankIcon(r.job);
+    const w=document.createElement("div"); w.className="t3"+(i===0?" r1":"");
+    w.innerHTML='<div class="medal">'+medal[i]+'</div>'
+      +(ic?'<span class="t3i"><img src="'+ic+'" alt=""></span>':'<span class="t3i"></span>')
+      +'<div class="t3n"></div><div class="t3s"></div><div class="t3cp"></div>';
+    w.querySelector(".t3n").textContent=r.nickname||"—";
+    w.querySelector(".t3s").textContent=(r.job||"")+(r.guild?(" · "+r.guild):"");
+    w.querySelector(".t3cp").textContent=fmt(r.combatPower);
+    box.appendChild(w);
+  });
+  const rs=$("#rankSrc");
+  if(rs) rs.textContent=(RANK.source&&RANK.source[0]?RANK.source[0].name:"")+" · 상위 3";
+}
+$("#rankMore")&&$("#rankMore").addEventListener("click",()=>{
+  const lr=$("#liveRank"); if(!lr) return;
+  lr.hidden=!lr.hidden;
+  $("#rankMore").textContent=lr.hidden?"전체 랭킹":"접기";
+});
+
+/* 공지·이벤트 (공식 포럼) */
+async function loadNotices(){
+  if(NOTICES.notices.length||NOTICES.events.length){ homeNews(); return; }
+  try{ const r=await fetch("data/notices.json",{cache:"no-store"});
+    if(r.ok){ NOTICES=await r.json(); } }catch(e){}
+  homeNews();
+}
+function newsRow(x, isEvent){
+  const a=document.createElement("a");
+  a.className="newsrow"; a.href=x.url; a.target="_blank"; a.rel="noopener";
+  a.innerHTML=(x.thumb?'<span class="nthumb"><img src="'+x.thumb+'" alt="" loading="lazy"></span>':'')
+    +'<div class="nmain"><span class="ntag'+(isEvent?" ev":"")+'"></span>'
+    +'<span class="ntt"></span><div class="ndate"></div></div><span class="narr">›</span>';
+  a.querySelector(".ntag").textContent=x.tag||(isEvent?"이벤트":"공지");
+  a.querySelector(".ntt").textContent=x.title;
+  a.querySelector(".ndate").textContent=x.date||"";
+  return a;
+}
+function homeNews(){
+  const ev=$("#homeEvents"), no=$("#homeNotices");
+  if(ev){ ev.className="newslist"; ev.textContent="";
+    if(NOTICES.events.length) NOTICES.events.slice(0,6).forEach(x=>ev.appendChild(newsRow(x,true)));
+    else { ev.className="rankempty"; ev.textContent="배포된 사이트에서 공식 포럼 이벤트가 표시됩니다."; } }
+  if(no){ no.className="newslist"; no.textContent="";
+    if(NOTICES.notices.length) NOTICES.notices.slice(0,6).forEach(x=>no.appendChild(newsRow(x,false)));
+    else { no.className="rankempty"; no.textContent="배포된 사이트에서 공식 포럼 공지가 표시됩니다."; } }
+}
+
+async function loadRanking(){
+  let d=null;
+  try{
+    const r=await fetch("data/ranking.json",{cache:"no-store"});
+    if(r.ok) d=await r.json();
+  }catch(e){ return; }
+  if(!d||!d.rows||!d.rows.length) return;
+  RANK=d;
+  top3Card();
+  const box=$("#liveRank"); box.textContent="";
+  const wrap=document.createElement("div"); wrap.className="rkwrap";
+  wrap.innerHTML='<div class="tscroll"><table><thead><tr>'
+    +'<th style="width:56px">순위</th><th>플레이어</th><th>길드</th><th>직업</th>'
+    +'<th>서버</th><th style="text-align:right">레벨</th><th style="text-align:right">전투력</th>'
+    +'<th style="text-align:right">인기도</th></tr></thead><tbody></tbody></table></div>';
+  const tb=wrap.querySelector("tbody");
+  d.rows.slice(0,50).forEach(r=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML='<td><span class="rk"></span></td><td></td><td></td><td></td>'
+      +'<td></td><td class="n"></td><td class="n"></td><td class="n"></td>';
+    const c=tr.children;
+    c[0].firstChild.textContent=r.rank;
+    c[1].textContent=r.nickname||"—"; c[2].textContent=r.guild||"—";
+    c[3].textContent=r.job||"—"; c[4].textContent=r.server||"—";
+    c[5].textContent=r.level==null?"—":int(r.level);
+    c[6].textContent=fmt(r.combatPower);
+    c[7].textContent=r.popularity==null?"—":int(r.popularity);
+    tb.appendChild(tr);
+  });
+  box.appendChild(wrap);
+  const src=document.createElement("div"); src.className="rksrc";
+  const names=(d.source||[]).map(s=>'<a href="'+s.url+'" target="_blank" rel="noopener">'
+    +s.name+"</a>").join(" · ");
+  src.innerHTML="<span>출처 "+(names||"—")+"</span><span>수집 "+(d.collectedAt||"—")
+    +"</span><span>상위 50명 / 수집 "+d.rows.length+"명</span>";
+  box.appendChild(src);
+}
+/* 등록 링크에 지금 값을 실어 보낸다 — 보드에서 폼이 미리 채워진다 */
+function boardLink(){
+  const a=$("#boardReg"); if(!a) return;
+  const base=a.getAttribute("href").split("#")[0];
+  if(!ready()){ a.href=base; return; }
+  const payload={job:S.job, cp:Math.round(combatPower(cpVec())), stage:WALL?WALL.id:""};
+  try{
+    const b=btoa(String.fromCharCode.apply(null,
+      Array.from(new TextEncoder().encode(JSON.stringify(payload)))))
+      .replace(/\+/g,"-").replace(/\//g,"_");
+    a.href=base+"#reg="+b;
+  }catch(e){ a.href=base; }
+}
+
+
+/* 스테이지로 이동 */
+function gotoStage(s){
+  S.mode=s.mode; S.ch="ch:"+s.ch; S.q="";
+  $("#q").value="";
+  $$("#modeSegs .seg").forEach(b=>b.setAttribute("aria-pressed", b.dataset.mode===s.mode?"true":"false"));
+  $("#chSel").value=S.ch;
+  renderList(); select(s); showTab("stage");
+}
+
+/* ---------- 통합 검색 ---------- */
+const gq=$("#gq"), gqOut=$("#gqOut");
+function search(q){
+  q=q.trim().toLowerCase();
+  if(!q) return null;
+  const out=[];
+  if(RANK&&RANK.rows){
+    RANK.rows.forEach(r=>{
+      if(out.length>=6) return;
+      if(r.nickname&&r.nickname.toLowerCase().indexOf(q)>=0)
+        out.push({k:"캐릭터", n:r.nickname, ico:rankIcon(r.job),
+          s:r.rank+"위 · "+(r.job||"")+(r.guild?(" · "+r.guild):"")+" · 전투력 "+fmt(r.combatPower),
+          go:()=>{ const lr=$("#liveRank"); if(lr){ lr.hidden=false;
+            const mm=$("#rankMore"); if(mm) mm.textContent="접기";
+            if(lr.scrollIntoView) lr.scrollIntoView({block:"center",behavior:"smooth"});
+            $$("#liveRank tbody tr").forEach(tr=>{
+              tr.style.background = tr.textContent.indexOf(r.nickname)>=0 ? "var(--accent-soft)" : ""; });
+          }}});
+    });
+  }
+  DATA.stages.forEach(s=>{
+    if(out.length>=8) return;
+    if(s.id.toLowerCase().indexOf(q)===0||s.id.toLowerCase()===q)
+      out.push({k:"스테이지", n:s.id, s:s.mode+" · 챕터 "+s.ch+" · 총 HP "+fmt(s.hp),
+                go:()=>gotoStage(s)});
+  });
+  DEX.monsters.forEach(m=>{
+    if(out.length>=16) return;
+    if(m.n&&m.n.toLowerCase().indexOf(q)>=0)
+      out.push({k:m.boss?"보스":"몬스터", n:m.n, ico:monIco(m),
+                s:"챕터 "+m.ch[0]+(m.ch[1]!==m.ch[0]?"~"+m.ch[1]:"")+" · "+m.ns+"개 스테이지",
+                go:()=>{ $("#monQ").value=m.n; monFilter.q=m.n; showTab("mon"); renderMonDex(); }});
+  });
+  Object.keys(SUP_BY).forEach(ko=>{
+    if(out.length>=22) return;
+    if(ko.toLowerCase().indexOf(q)>=0){
+      const x=SUP_BY[ko]["레전드리"]||SUP_BY[ko][Object.keys(SUP_BY[ko])[0]];
+      out.push({k:"동료", n:ko, ico:supIco(x), s:"등급 4단계 · 전용 스킬 "+x.skills.length+"개",
+                go:()=>{ $("#supDexQ").value=ko; supF.q=ko; showTab("sup"); supDex(); }});
+    }
+  });
+  DATA.jobs.forEach(j=>{
+    if(out.length>=26) return;
+    if(j.ko.toLowerCase().indexOf(q)>=0)
+      out.push({k:"직업", n:j.ko, ico:ICONS[j.id], s:j.fam+" · 스킬 "+j.skills.length+"개",
+                go:()=>{ setJob(j.id); showTab("home"); }});
+  });
+  return out;
+}
+function renderSearch(){
+  const r=search(gq.value);
+  if(r===null){ gqOut.hidden=true; gqOut.textContent=""; return; }
+  gqOut.textContent=""; gqOut.hidden=false;
+  if(!r.length){ const d=document.createElement("div");
+    d.className="qempty"; d.textContent="찾는 게 없습니다. 스테이지는 36-8, 몬스터는 영문 이름으로 쳐보세요.";
+    gqOut.appendChild(d); return; }
+  r.forEach(x=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="qrow";
+    b.innerHTML=icoImg(x.ico,"qi")+'<div><div class="qn"></div><div class="qs"></div></div>'
+      +'<span class="qkind"></span>';
+    b.querySelector(".qn").textContent=x.n;
+    b.querySelector(".qs").textContent=x.s;
+    b.querySelector(".qkind").textContent=x.k;
+    b.addEventListener("click",()=>{ gqOut.hidden=true; gq.value=""; x.go(); });
+    gqOut.appendChild(b);
+  });
+}
+gq.addEventListener("input",renderSearch);
+gq.addEventListener("focus",renderSearch);
+document.addEventListener("click",e=>{
+  if(!e.target.closest(".searchwrap")) gqOut.hidden=true;
+});
+
+/* ---------- 동료 도감 ---------- */
+/* 동료 패시브의 stat 키는 장착 옵션(OPT_KO)과 이름이 겹치지 않는 게 있다 */
+const BUFF_KO={Attack:"공격력",AttackPower:"공격력",FinalDamage:"최종 데미지",
+  CriticalPower:"크리티컬 데미지",CriticalChance:"크리티컬 확률",AttackSpeed:"공격 속도",
+  MaxDamageRatio:"최대 데미지 배율",MinDamageRatio:"최소 데미지 배율",SkillPower:"스킬 데미지",
+  BaseAttackPower:"기본 공격 데미지",AttackPowerToBoss:"보스 데미지",
+  AttackPowerExcludeBoss:"일반 몬스터 데미지",MainStatR:"주스탯"};
+const supF={q:"",grade:"*",sort:"tier"};
+function buildDexFilters(){
+  const g=$("#supDexGrade");
+  [["*","전체"]].concat(GRADES.map(x=>[x,x])).forEach(([v,l])=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="seg"; b.textContent=l;
+    b.setAttribute("aria-pressed", v===supF.grade?"true":"false");
+    b.addEventListener("click",()=>{ supF.grade=v;
+      $$("#supDexGrade .seg").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+      supDex(); });
+    g.appendChild(b);
+  });
+  const s=$("#supDexSort");
+  [["tier","티어순"],["name","이름순"],["grade","등급순"]].forEach(([v,l])=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="seg"; b.textContent=l;
+    b.setAttribute("aria-pressed", v===supF.sort?"true":"false");
+    b.addEventListener("click",()=>{ supF.sort=v;
+      $$("#supDexSort .seg").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+      supDex(); });
+    s.appendChild(b);
+  });
+  $("#supDexQ").addEventListener("input",e=>{ supF.q=e.target.value.trim(); supDex(); });
+}
+function supDex(){
+  const box=$("#supDex"), hint=$("#supDexHint");
+  box.textContent="";
+  const tier=supTier(0);
+  const rank={}; if(tier) tier.forEach((r,i)=>{ rank[r.x.code]={i:i,d:r.d}; });
+  const st=refStage();
+  hint.textContent=(tier?("초당 피해 기준 "+(st?st.id:"—")):"—")+(ready()?"":" · 예시 스탯");
+  const q=supF.q.toLowerCase();
+  let rows=DATA.supporters.filter(x=>
+    (supF.grade==="*"||x.grade===supF.grade) && (!q||x.ko.toLowerCase().indexOf(q)>=0));
+  const gi=g=>GRADES.indexOf(g);
+  if(supF.sort==="name") rows.sort((a,b)=>a.ko.localeCompare(b.ko,"ko")||gi(a.grade)-gi(b.grade));
+  else if(supF.sort==="grade") rows.sort((a,b)=>gi(b.grade)-gi(a.grade)||a.ko.localeCompare(b.ko,"ko"));
+  else if(tier) rows.sort((a,b)=>rank[a.code].i-rank[b.code].i);
+  else rows.sort((a,b)=>gi(b.grade)-gi(a.grade)||a.ko.localeCompare(b.ko,"ko"));
+  if(!rows.length){ rempty(box,"조건에 맞는 동료가 없습니다."); return; }
+  const mx=tier&&tier[0]?tier[0].d:1, cur=curSup();
+  rows.forEach(x=>{
+    const w=document.createElement("div");
+    w.className="sdrow"+(cur&&cur.code===x.code?" mine":"");
+    const r=rank[x.code];
+    w.innerHTML='<span class="rn"></span>'+icoImg(supIco(x),"si")
+      +'<div><div class="sdname"><span class="nm"></span><span class="gpill"></span></div>'
+      +'<div class="sdsub"></div></div>'
+      +'<div class="rb"><i></i></div><div class="rv"></div>';
+    w.querySelector(".rn").textContent=r?(r.i+1):"—";
+    w.querySelector(".nm").textContent=x.ko;
+    const gp=w.querySelector(".gpill"); gp.textContent=x.grade; gp.dataset.g=x.grade;
+    const buffs={};
+    (x.buffs||[]).forEach(b=>{ const k=BUFF_KO[b.stat]||OPT_KO[b.stat]||b.stat;
+      buffs[k]=(buffs[k]||0)+b.val; });
+    const bl=Object.keys(buffs).map(k=>k+" "+(buffs[k]>0?"+":"")+buffs[k].toFixed(0)+"%");
+    w.querySelector(".sdsub").textContent="만렙 Lv"+capOf(x.grade)+" · 전용 스킬 "+x.skills.length
+      +"개 · 소환 "+(x.dur/1000).toFixed(0)+"초"+(bl.length?("  ·  "+bl.join(" · ")):"");
+    w.querySelector(".rb i").style.width=r?Math.max(r.d/mx*100,2).toFixed(1)+"%":"0";
+    w.querySelector(".rv").textContent=r?fmt(r.d):"—";
+    w.style.cursor="pointer";
+    w.addEventListener("click",()=>{
+      pickT="main"; setSlot("main",x.code,clamp(S.supLv,1,capOf(x.grade)));
+      afterSup(); showTab("stage");
+    });
+    box.appendChild(w);
+  });
+}
+
+/* ---------- 몬스터 도감 ---------- */
+const monFilter={q:"",kind:"*",ch:"all",sort:"ch"};
+function buildMonDex(){
+  const sel=$("#monCh");
+  const all=document.createElement("option"); all.value="all"; all.textContent="전체 챕터";
+  sel.appendChild(all);
+  const chs=new Set(); DEX.monsters.forEach(m=>{ for(let c=m.ch[0];c<=m.ch[1];c++) chs.add(c); });
+  Array.from(chs).sort((a,b)=>a-b).forEach(c=>{
+    const o=document.createElement("option"); o.value=String(c); o.textContent="챕터 "+c; sel.appendChild(o);
+  });
+  sel.addEventListener("change",()=>{ monFilter.ch=sel.value; renderMonDex(); });
+  $("#monQ").addEventListener("input",e=>{ monFilter.q=e.target.value.trim(); renderMonDex(); });
+  $("#monKind").addEventListener("click",e=>{
+    const b=e.target.closest(".seg"); if(!b) return;
+    monFilter.kind=b.dataset.k;
+    $$("#monKind .seg").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+    renderMonDex();
+  });
+  $("#monSort").addEventListener("click",e=>{
+    const b=e.target.closest(".seg"); if(!b) return;
+    monFilter.sort=b.dataset.s;
+    $$("#monSort .seg").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+    renderMonDex();
+  });
+  $("#monHint").textContent=DEX.monsters.length+"종 · 보스 "
+    +DEX.monsters.filter(m=>m.boss).length;
+  renderMonDex();
+}
+function renderMonDex(){
+  const tb=$("#monBody"); tb.textContent="";
+  const q=monFilter.q.toLowerCase();
+  let rows=DEX.monsters.filter(m=>{
+    if(monFilter.kind==="boss"&&!m.boss) return false;
+    if(monFilter.kind==="norm"&&m.boss) return false;
+    if(monFilter.ch!=="all"){ const c=+monFilter.ch; if(c<m.ch[0]||c>m.ch[1]) return false; }
+    return !q||(m.n||"").toLowerCase().indexOf(q)>=0;
+  });
+  if(monFilter.sort==="hp") rows=rows.slice().sort((a,b)=>b.hp[b.hp.length-1]-a.hp[a.hp.length-1]);
+  else if(monFilter.sort==="n") rows=rows.slice().sort((a,b)=>(a.n||"").localeCompare(b.n||""));
+  const CAP=300;
+  rows.slice(0,CAP).forEach(m=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML='<td><div class="mcell"></div></td><td class="n"></td><td class="n"></td>'
+      +'<td class="n"></td><td class="n"></td><td class="n"></td>';
+    const c=tr.children;
+    c[0].firstChild.innerHTML=icoImg(monIco(m),"mi")+'<div><b></b>'
+      +(m.boss?' <span class="bosspill">보스</span>':'')
+      +'<div class="rngsub"></div></div>';
+    c[0].querySelector("b").textContent=m.n||("#"+m.ci);
+    c[0].querySelector(".rngsub").textContent="챕터 "+m.ch[0]+(m.ch[1]!==m.ch[0]?"~"+m.ch[1]:"");
+    c[1].textContent=rngTxt(m.hp,fmt);
+    c[2].textContent=rngTxt(m.df,int);
+    c[3].textContent=rngTxt(m.ev,int);
+    c[4].textContent=rngTxt(m.sp,v=>int(v)+"mm/s");
+    c[5].textContent=m.ns+"곳";
+    tb.appendChild(tr);
+  });
+  $("#monCount").textContent = rows.length>CAP
+    ? rows.length.toLocaleString("ko-KR")+"종 중 "+CAP+"종 — 검색으로 좁히세요"
+    : rows.length.toLocaleString("ko-KR")+"종";
+}
+
+/* ---------- 강화 계산기 ---------- */
+const SF=new Map(DATA.starforce.map(x=>[x.sf,x]));
+const SFMAX=Math.max.apply(null,DATA.starforce.map(x=>x.sf));
+const costOf=(row,key)=>{ const c=(row.cost||[]).find(v=>v[0]===key); return c?c[1]:0; };
+/* 한 단계의 기대 시도 횟수. 하락은 한 단계 되돌아가는 것으로 보고 마르코프 사슬을 푼다.
+   파괴는 별개 사건으로 세고 되돌리지 않는다 — 복구 비용 테이블이 없어서 모델에 못 넣는다. */
+function starPlan(from,to){
+  const steps=[];
+  let scroll=0, gold=0, boom=0;
+  for(let s=from;s<to;s++){
+    const r=SF.get(s); if(!r||!r.ok) return null;
+    const ok=r.ok/100, down=(r.down||0)/100, bm=(r.boom||0)/100;
+    const stay=1-ok-down-bm;
+    const tries=1/Math.max(ok,1e-9);
+    const sc=costOf(r,"SCROLL_STARFORCE")*tries, gd=costOf(r,"Gold")*tries;
+    scroll+=sc; gold+=gd; boom+=bm*tries;
+    steps.push({sf:s,ok:r.ok,down:r.down,boom:r.boom,stay:stay*100,tries:tries,scroll:sc,gold:gd});
+  }
+  return {steps:steps, scroll:scroll, gold:gold, boom:boom};
+}
+function renderStar(){
+  const box=$("#sfOut"); box.textContent="";
+  const a=parseInt($("#sfFrom").value,10), b=parseInt($("#sfTo").value,10);
+  const note=(c,txt)=>{ const d=document.createElement("div"); d.className="note "+c;
+    d.textContent=txt; box.appendChild(d); };
+  if(!isFinite(a)||!isFinite(b)||b<=a){ note("neutral","목표 단계를 현재보다 높게 넣으세요."); return; }
+  if(b>SFMAX){ note("warn","테이블에 있는 최대 단계는 ★"+SFMAX+" 입니다."); return; }
+  const p=starPlan(a,b);
+  if(!p){ note("warn","이 구간은 확률 테이블에 없습니다."); return; }
+  const g=(SF.get(b)?SF.get(b).main:0)-(SF.get(a)?SF.get(a).main:0);
+  note("ok","★"+a+" → ★"+b+" · 기대 주문서 "+int(p.scroll)+"장 · 기대 메소 "+fmt(p.gold)
+    +" · 주스탯 +"+g.toFixed(0)+"%p");
+  if(p.boom>0.005) note("bad","기대 파괴 "+p.boom.toFixed(2)
+    +"회 — 복구 비용은 테이블에 없어 계산에 넣지 않았습니다. 실제 비용은 이보다 큽니다.");
+  const h=document.createElement("p"); h.className="hint";
+  h.textContent="성공할 때까지 반복하는 기대값입니다. 하락은 한 단계 되돌아가는 것으로 보고 풀었고, "
+    +"실제 게임의 스타캐치·이벤트 할인은 반영하지 않았습니다.";
+  box.appendChild(h);
+}
+const CUBE_G=["Grade1","Grade2","Grade3","Grade4","Grade5","Grade6"];
+const CUBE_KO={Grade1:"노말",Grade2:"레어",Grade3:"에픽",Grade4:"유니크",Grade5:"레전드리",Grade6:"미스틱"};
+function renderCube(){
+  const box=$("#cbOut"); box.textContent="";
+  const from=$("#cbFrom").value, to=$("#cbTo").value;
+  const note=(c,txt)=>{ const d=document.createElement("div"); d.className="note "+c;
+    d.textContent=txt; box.appendChild(d); };
+  const i=CUBE_G.indexOf(from), j=CUBE_G.indexOf(to);
+  if(i<0||j<0||j<=i){ note("neutral","목표 등급을 현재보다 높게 고르세요."); return; }
+  let cube=0, gold=0, ok=true;
+  const seen={};
+  DATA.cube.forEach(x=>{ if(!seen[x.grade]) seen[x.grade]=x; });
+  for(let k=i;k<j;k++){
+    const r=seen[CUBE_G[k]];
+    if(!r||!r.prob){ ok=false; break; }
+    const exp=Math.min(100/r.prob, r.pity||Infinity);
+    cube+=exp*costOf(r,"MIRACLE_CUBE"); gold+=exp*costOf(r,"Gold");
+  }
+  if(!ok){ note("warn","이 구간은 확률 테이블에 없습니다."); return; }
+  note("ok",CUBE_KO[from]+" → "+CUBE_KO[to]+" · 기대 큐브 "+int(cube)+"개 · 기대 메소 "+fmt(gold));
+  const h=document.createElement("p"); h.className="hint";
+  h.textContent="천장(일정 횟수 도달 시 확정 상승)을 반영한 기대값입니다. "
+    +"부위별 확률이 같아서 부위는 구분하지 않았습니다.";
+  box.appendChild(h);
+}
+function buildEnh(){
+  const f=$("#cbFrom"), t2=$("#cbTo");
+  CUBE_G.forEach(g=>{
+    const o=document.createElement("option"); o.value=g; o.textContent=CUBE_KO[g]; f.appendChild(o);
+    const o2=document.createElement("option"); o2.value=g; o2.textContent=CUBE_KO[g]; t2.appendChild(o2);
+  });
+  f.value="Grade3"; t2.value="Grade5";
+  $("#sfFrom").max=SFMAX-1; $("#sfTo").max=SFMAX;
+  ["#sfFrom","#sfTo"].forEach(s=>$(s).addEventListener("input",renderStar));
+  ["#cbFrom","#cbTo"].forEach(s=>$(s).addEventListener("change",renderCube));
+  renderStar(); renderCube();
+}
+
+/* ---------- 유물 도감 ---------- */
+const ART_STAT={Attack:"공격력",MainStat:"주스탯",MaxHp:"최대 HP",AttackPower:"공격력%",
+  CriticalChance:"크리티컬 확률",CriticalPower:"크리티컬 데미지",SkillPower:"스킬 데미지",
+  Defence:"방어력",FinalDamage:"최종 데미지",MaxHpR:"최대 HP%"};
+function buildArtDex(){
+  const box=$("#artDex"); box.textContent="";
+  DEX.artifacts.forEach(a=>{
+    const w=document.createElement("div"); w.className="artcard";
+    w.innerHTML=icoImg(DEXICONS.art[a.code]||"","ai")
+      +'<span class="gpill"></span><div class="an2"></div><div class="ao"></div>';
+    const gp=w.querySelector(".gpill"); gp.textContent=a.grade; gp.dataset.g=a.grade;
+    w.querySelector(".an2").textContent=a.code;
+    w.querySelector(".ao").textContent=(a.opts||[])
+      .map(o=>(ART_STAT[o.stat]||o.stat)+" "+o.val).join(" · ")
+      +(a.nSkill?("  ·  장착 스킬 "+a.nSkill+"개"):"");
+    w.title=a.code+" · "+a.grade;
+    box.appendChild(w);
+  });
+  const nb=$("#artNote"); nb.textContent="";
+  const d0=document.createElement("div"); d0.className="note neutral";
+  d0.textContent="옵션 수치는 레벨 계수를 곱하기 전 기본값입니다 — 실제 적용값은 유물 레벨에 따라 커집니다.";
+  nb.appendChild(d0);
+  (DEX.artUpgrade||[]).forEach(u=>{
+    const d=document.createElement("div"); d.className="note neutral";
+    d.textContent=u.grade+" 유물 "+u.need+"개를 모으면 "+u.to+" 로 올라갑니다.";
+    nb.appendChild(d);
+  });
+  if(!(DEX.artUpgrade||[]).length){
+    const d=document.createElement("div"); d.className="note neutral";
+    d.textContent="업그레이드 테이블이 비어 있습니다."; nb.appendChild(d);
+  }
+}
+
+renderSupSlots();
+renderSupPick();
+buildMonDex(); buildEnh(); buildArtDex(); buildDexFilters();
+
+renderList();
+renderPresets();
+(function(){
+  let last=null, all={};
+  try{ last=localStorage.getItem(LKEY); all=readPresets(); }catch(e){}
+  if(last&&all[last]){ $("#presetName").value=last; restore(all[last]); }
+})();
+showTab((location.hash||"#home").slice(1), false);
+loadRanking(); loadNotices();
+})();
+</script>

@@ -1,0 +1,37 @@
+{
+  "_읽어라": [
+    "2026-08-27 사용자 지시로 mgf(전체 랭킹) 를 켰다. 페이지당 30행, pages 로 깊이 조절.",
+    "얹는 일이라, 켜기 전에 상대 사이트 동의를 받는 게 맞다. robots.txt 가 안 막는 것과",
+    "약관이 허락하는 것은 다르다. 연락처는 아래 contact 에 있다.",
+    "동의를 받았다면 enabled 를 true 로 바꾸고 python3 tools/collect-ranking.py 를 돌려라.",
+    "수집기는 순위에 필요한 최소 필드만 가져오고 프로필/식별 정보는 버린다."
+  ],
+  "delaySeconds": 1.5,
+  "sources": [
+    {
+      "id": "mekipick",
+      "name": "메키픽 (MekiPick)",
+      "site": "https://www.mekipick.com/",
+      "contact": "사이트 내 문의",
+      "license": "동의 확인 전 — 사용자 판단으로 켬 (2026-08-27). 화면에 출처 표기.",
+      "adapter": "mekipick",
+      "enabled": false,
+      "note": "하이라이트 상위 20만 노출. mgf 가 전체를 커버하므로 끈다.",
+      "urls": [
+        "https://www.mekipick.com/ranking/total"
+      ]
+    },
+    {
+      "id": "mgf",
+      "name": "MGF.GG",
+      "site": "https://mgf.gg/ranking/",
+      "contact": "admin@mgf.gg",
+      "license": "공개 페이지 파싱 — 화면에 출처 표기 (2026-08-27 사용자 지시)",
+      "adapter": "mgf",
+      "enabled": true,
+      "note": "전체 사다리 ?page=N. 페이지당 30행. 기본 100페이지=3000명.",
+      "urlTemplate": "https://mgf.gg/ranking/?page={page}",
+      "pages": 100
+    }
+  ]
+}

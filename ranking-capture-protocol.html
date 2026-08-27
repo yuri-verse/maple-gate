@@ -1,0 +1,600 @@
+<title>랭킹 트래픽 조사 프로토콜</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#F4F6F8; --panel:#FFFFFF; --panel-2:#EDF1F4; --sunken:#E4E9ED;
+  --line:#D8DFE5; --line-2:#C3CDD5;
+  --ink:#141A20; --ink-2:#48555F; --ink-3:#7A8792;
+  --gold:#B07714; --gold-ink:#8A5C08; --gold-soft:#F6EBD5;
+  --go:#0E7A55; --go-soft:#DCEFE7;
+  --gate:#9A6410; --gate-soft:#F7EBD3;
+  --stop:#BE3A31; --stop-soft:#F8E2E0;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --shadow:0 1px 2px rgba(20,26,32,.05), 0 10px 30px -18px rgba(20,26,32,.22);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0E1319; --panel:#161D25; --panel-2:#1B232C; --sunken:#10161C;
+  --line:#242E38; --line-2:#33414E;
+  --ink:#E7EDF2; --ink-2:#9DAAB6; --ink-3:#68757F;
+  --gold:#E0A43B; --gold-ink:#F2C374; --gold-soft:#2C220F;
+  --go:#3BC28E; --go-soft:#0E2C21;
+  --gate:#E0A43B; --gate-soft:#2C220F;
+  --stop:#EC6459; --stop-soft:#331A18;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 16px 40px -22px rgba(0,0,0,.95);
+} }
+:root[data-theme="dark"]{
+  --bg:#0E1319; --panel:#161D25; --panel-2:#1B232C; --sunken:#10161C;
+  --line:#242E38; --line-2:#33414E;
+  --ink:#E7EDF2; --ink-2:#9DAAB6; --ink-3:#68757F;
+  --gold:#E0A43B; --gold-ink:#F2C374; --gold-soft:#2C220F;
+  --go:#3BC28E; --go-soft:#0E2C21;
+  --gate:#E0A43B; --gate-soft:#2C220F;
+  --stop:#EC6459; --stop-soft:#331A18;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 16px 40px -22px rgba(0,0,0,.95);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans);
+  font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased;
+  font-feature-settings:"tnum" 0}
+.mono{font-family:var(--mono); font-variant-numeric:tabular-nums}
+h1,h2,h3,h4{margin:0; letter-spacing:-.02em; font-weight:700; text-wrap:balance; line-height:1.25}
+p{margin:0}
+a{color:var(--gold-ink); text-decoration:none; border-bottom:1px solid color-mix(in srgb,var(--gold-ink) 40%,transparent)}
+a:hover{border-bottom-color:var(--gold-ink)}
+:focus-visible{outline:2px solid var(--gold); outline-offset:3px; border-radius:3px}
+code{font-family:var(--mono); font-size:.86em; background:var(--sunken);
+  padding:.1em .38em; border-radius:5px; color:var(--ink); border:1px solid var(--line)}
+
+.wrap{max-width:860px; margin:0 auto; padding:0 24px}
+
+/* ---- top ---- */
+.top{border-bottom:1px solid var(--line); background:var(--panel);
+  position:sticky; top:0; z-index:10}
+.top .wrap{display:flex; align-items:center; gap:14px; height:56px}
+.top .eye{font-family:var(--mono); font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+  color:var(--ink-3)}
+.top .eye b{color:var(--gold-ink); font-weight:600}
+.tbtn{margin-left:auto; width:34px; height:34px; display:grid; place-items:center; cursor:pointer;
+  border:1px solid var(--line-2); border-radius:8px; background:var(--panel-2); color:var(--ink-2)}
+.tbtn:hover{color:var(--ink); border-color:var(--ink-3)}
+
+/* ---- hero ---- */
+.hero{padding:56px 0 30px}
+.kicker{display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:12px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--gold-ink); font-weight:600; margin-bottom:16px}
+.kicker::before{content:""; width:22px; height:1px; background:var(--gold)}
+.hero h1{font-size:clamp(30px,5vw,46px); letter-spacing:-.035em}
+.hero .lede{margin-top:16px; max-width:60ch; color:var(--ink-2); font-size:17px}
+.scope{display:flex; flex-wrap:wrap; gap:8px; margin-top:22px}
+.scope .chip{display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:500;
+  padding:6px 12px; border-radius:999px; background:var(--go-soft); color:var(--go);
+  border:1px solid color-mix(in srgb,var(--go) 22%,transparent)}
+.scope .chip.no{background:var(--stop-soft); color:var(--stop);
+  border-color:color-mix(in srgb,var(--stop) 22%,transparent)}
+.scope .chip::before{content:"✓"; font-weight:700}
+.scope .chip.no::before{content:"✕"}
+
+/* ---- known facts panel ---- */
+.facts{margin:30px 0 8px; border:1px solid var(--line); border-radius:14px; overflow:hidden;
+  background:var(--panel); box-shadow:var(--shadow)}
+.facts .fh{padding:15px 20px; border-bottom:1px solid var(--line); display:flex; gap:10px;
+  align-items:baseline; flex-wrap:wrap; background:var(--panel-2)}
+.facts .fh h2{font-size:15px}
+.facts .fh span{font-size:12px; color:var(--ink-3); margin-left:auto}
+.facts .factbody{padding:6px 20px 18px}
+.hosts{width:100%; border-collapse:collapse; font-size:13.5px; margin-top:8px}
+.hosts th,.hosts td{text-align:left; padding:8px 10px; border-bottom:1px solid var(--line)}
+.hosts th{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); font-weight:600}
+.hosts tr:last-child td{border-bottom:0}
+.hosts td.h{font-family:var(--mono); color:var(--gold-ink)}
+.factnote{font-size:13px; color:var(--ink-2); line-height:1.65; margin-top:14px;
+  padding-top:14px; border-top:1px dashed var(--line-2)}
+.factnote b{color:var(--ink)}
+
+/* ---- sections ---- */
+section.step{padding:36px 0; border-top:1px solid var(--line)}
+.sechead{display:flex; gap:16px; align-items:flex-start; margin-bottom:22px}
+.num{flex:0 0 auto; width:40px; height:40px; display:grid; place-items:center; border-radius:11px;
+  font-family:var(--mono); font-weight:600; font-size:16px; background:var(--gold-soft);
+  color:var(--gold-ink); border:1px solid color-mix(in srgb,var(--gold) 30%,transparent)}
+.sechead h2{font-size:23px; letter-spacing:-.025em; padding-top:5px}
+.sechead .sub{font-size:13.5px; color:var(--ink-3); margin-top:3px}
+
+.lead{color:var(--ink-2); max-width:64ch; margin-bottom:20px}
+
+/* tool cards */
+.tools{display:grid; gap:12px}
+.tool{border:1px solid var(--line); border-radius:12px; background:var(--panel); padding:16px 18px}
+.tool.pri{border-color:color-mix(in srgb,var(--gold) 40%,var(--line)); background:var(--panel)}
+.tool .th{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:6px}
+.tool .th b{font-size:15px}
+.tool .th .tag{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
+  padding:2px 8px; border-radius:999px; background:var(--sunken); color:var(--ink-3)}
+.tool.pri .th .tag{background:var(--gold-soft); color:var(--gold-ink)}
+.tool .th .plat{margin-left:auto; font-size:11.5px; color:var(--ink-3); font-family:var(--mono)}
+.tool p{font-size:13.5px; color:var(--ink-2); line-height:1.6}
+.tool p + p{margin-top:7px}
+
+/* phase list (ordered, meaningful sequence) */
+.phases{display:grid; gap:0; counter-reset:ph; border:1px solid var(--line); border-radius:13px;
+  overflow:hidden; background:var(--panel)}
+.phase{display:grid; grid-template-columns:44px 1fr; gap:0; border-top:1px solid var(--line)}
+.phase:first-child{border-top:0}
+.phase .pn{counter-increment:ph; background:var(--panel-2); display:flex; justify-content:center;
+  padding-top:17px; font-family:var(--mono); font-weight:600; color:var(--ink-3); font-size:13px;
+  border-right:1px solid var(--line)}
+.phase .pn::before{content:"P" counter(ph)}
+.phase .pc{padding:15px 18px}
+.phase .pc h4{font-size:15px; margin-bottom:5px}
+.phase .pc p{font-size:13.5px; color:var(--ink-2); line-height:1.6}
+.phase .pc ul{margin:9px 0 0; padding-left:18px; font-size:13px; color:var(--ink-2); line-height:1.6}
+.phase .pc li{margin:3px 0}
+.phase .pc .out{margin-top:9px; font-size:12.5px; color:var(--ink-3); font-family:var(--mono)}
+.phase .pc .out b{color:var(--ink-2); font-weight:600}
+
+/* the STOP gate */
+.gate{margin:22px 0; border:1.5px solid color-mix(in srgb,var(--stop) 50%,transparent); border-radius:13px;
+  background:var(--stop-soft); overflow:hidden}
+.gate .gh{padding:14px 18px; display:flex; align-items:center; gap:11px; font-weight:600; color:var(--stop);
+  border-bottom:1px solid color-mix(in srgb,var(--stop) 25%,transparent)}
+.gate .gh .sig{width:24px; height:24px; border-radius:7px; background:var(--stop); color:#fff;
+  display:grid; place-items:center; font-size:14px; font-weight:700; flex:0 0 auto}
+.gate .gb{padding:15px 18px; font-size:13.5px; color:var(--ink-2); line-height:1.65}
+.gate .gb b{color:var(--ink)}
+.gate .gb .test{margin-top:11px; padding:11px 13px; background:var(--panel); border-radius:9px;
+  border:1px solid var(--line); font-family:var(--mono); font-size:12.5px; color:var(--ink-2)}
+
+/* record form */
+.form{border:1px solid var(--line); border-radius:13px; overflow:hidden; background:var(--panel)}
+.form .frow{display:grid; grid-template-columns:180px 1fr; border-top:1px solid var(--line)}
+.form .frow:first-child{border-top:0}
+.form .fk{background:var(--panel-2); padding:11px 16px; font-family:var(--mono); font-size:12.5px;
+  color:var(--ink-2); border-right:1px solid var(--line); display:flex; align-items:center; gap:8px}
+.form .fk .req{color:var(--stop); font-size:14px}
+.form .fv{padding:11px 16px; font-size:13px; color:var(--ink-3); font-family:var(--mono)}
+.formcap{font-size:12.5px; color:var(--ink-3); margin-top:10px; line-height:1.6}
+.fieldset{margin-top:18px}
+.fieldset h4{font-size:13px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.08em;
+  color:var(--ink-3); margin-bottom:9px; font-weight:600}
+.chips{display:flex; flex-wrap:wrap; gap:7px}
+.fld{font-family:var(--mono); font-size:12px; padding:4px 9px; border-radius:6px; background:var(--sunken);
+  color:var(--ink-2); border:1px solid var(--line)}
+.fld.key{background:var(--gold-soft); color:var(--gold-ink); border-color:color-mix(in srgb,var(--gold) 26%,transparent)}
+
+/* decision: GO / NOGO */
+.decide{display:grid; gap:14px; grid-template-columns:1fr; margin-top:6px}
+@media(min-width:680px){ .decide{grid-template-columns:1fr 1fr} }
+.dcol{border:1px solid var(--line); border-radius:13px; overflow:hidden; background:var(--panel)}
+.dcol .dh{padding:13px 17px; font-weight:600; display:flex; align-items:center; gap:9px;
+  border-bottom:1px solid var(--line)}
+.dcol.go .dh{background:var(--go-soft); color:var(--go)}
+.dcol.no .dh{background:var(--stop-soft); color:var(--stop)}
+.dcol .dh .dot{width:9px; height:9px; border-radius:50%; background:currentColor}
+.dcol ul{margin:0; padding:15px 18px 16px 34px; font-size:13.5px; color:var(--ink-2); line-height:1.6}
+.dcol li{margin:7px 0}
+.dcol li b{color:var(--ink); font-weight:600}
+
+/* fallbacks */
+.fbs{display:grid; gap:11px}
+.fb{display:grid; grid-template-columns:auto 1fr auto; gap:14px; align-items:center;
+  border:1px solid var(--line); border-radius:12px; background:var(--panel); padding:14px 17px}
+.fb .fi{width:34px; height:34px; border-radius:9px; background:var(--gold-soft); color:var(--gold-ink);
+  display:grid; place-items:center; font-family:var(--mono); font-weight:600; font-size:13px; flex:0 0 auto}
+.fb .ft b{font-size:14.5px}
+.fb .ft p{font-size:12.5px; color:var(--ink-2); margin-top:2px; line-height:1.55}
+.fb .fs{font-size:11px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.06em;
+  padding:4px 10px; border-radius:999px; white-space:nowrap}
+.fb .fs.done{background:var(--go-soft); color:var(--go)}
+.fb .fs.ready{background:var(--gold-soft); color:var(--gold-ink)}
+.fb .fs.ext{background:var(--sunken); color:var(--ink-3)}
+@media(max-width:560px){ .fb{grid-template-columns:auto 1fr} .fb .fs{grid-column:2} }
+
+/* callout */
+.call{margin:20px 0; padding:15px 18px; border-left:3px solid var(--gold); background:var(--panel-2);
+  border-radius:0 10px 10px 0; font-size:13.5px; color:var(--ink-2); line-height:1.65}
+.call b{color:var(--ink)}
+
+.foot{border-top:1px solid var(--line); padding:30px 0 60px; margin-top:20px}
+.foot p{font-size:12.5px; color:var(--ink-3); line-height:1.7; max-width:70ch}
+.foot p + p{margin-top:9px}
+.foot b{color:var(--ink-2)}
+</style>
+
+<header class="top"><div class="wrap">
+  <span class="eye">메이플키우기 · <b>랭킹 데이터 조사</b></span>
+  <button class="tbtn" id="theme" aria-label="테마 전환" title="테마 전환">◐</button>
+</div></header>
+
+<main class="wrap">
+  <div class="hero">
+    <span class="kicker">조사 프로토콜 · 구현 전 단계</span>
+    <h1>랭킹 트래픽 조사 프로토콜</h1>
+    <p class="lede">본인 PC 클라이언트가 <b>정상적으로</b> 전투력 랭킹을 표시할 때 오가는
+      네트워크 요청을 관찰해, 스크린샷 제출 없이 랭킹을 수집할 수 있는지 판단하기 위한 절차서입니다.
+      수집 코드는 아직 쓰지 않습니다 — 먼저 무엇이 가능한지부터 확정합니다.</p>
+    <div class="scope">
+      <span class="chip">본인 PC 클라이언트</span>
+      <span class="chip">본인 계정 · 본인이 보는 화면</span>
+      <span class="chip no">인증서 고정 우회 없음</span>
+      <span class="chip no">암호화 · 인증 · 보안 우회 없음</span>
+    </div>
+
+    <div class="facts">
+      <div class="fh"><h2>이미 확인된 사실</h2><span>클라이언트 파일 · 공개 CDN 에서 확인 (우회 아님)</span></div>
+      <div class="factbody">
+        <p style="font-size:13.5px;color:var(--ink-2);margin-top:8px">게임은 지역별 <b style="color:var(--ink)">HTTPS 서비스 호스트</b>와 통신합니다.
+          공개 서버 설정 파일(<code>host_live_windows.json</code>)에 그대로 적혀 있습니다.</p>
+        <div style="overflow-x:auto">
+        <table class="hosts">
+          <thead><tr><th>서버</th><th>지역</th><th>호스트</th></tr></thead>
+          <tbody>
+            <tr><td>스카니아</td><td>KR</td><td class="h">makr-service.nexon.com</td></tr>
+            <tr><td>루나</td><td>EU</td><td class="h">maeu-service.nexon.com</td></tr>
+            <tr><td>베라</td><td>NA</td><td class="h">mana-service.nexon.com</td></tr>
+            <tr><td>아리아</td><td>TW</td><td class="h">matw-service.nexon.com</td></tr>
+            <tr><td>아퀼라</td><td>SG</td><td class="h">masg-service.nexon.com</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="factnote"><b>TLS 인증서</b>는 표준 DigiCert 발급 <code>*.nexon.com</code> — OS 신뢰
+          저장소를 쓴다는 뜻이라, 앱 레벨 고정만 없으면 프록시 캡처가 통할 여지가 있습니다.
+          알 수 없는 경로에는 <code>404</code> 를 돌려주는 <b>RPC 형태 서비스</b>라, 실제 랭킹 요청
+          경로·본문 형식은 서버가 알려주지 않습니다 — 그래서 본인 클라이언트 트래픽을 봐야 합니다.
+          엔진은 Unity(빌드 <code>1.14.0</code>)입니다.</p>
+        <p class="factnote" style="border-top:0;padding-top:4px"><b>이 게임이 맞나</b> — 클라이언트 제품명은
+          <code>MapleIdleRPG</code>, CDN 경로는 <code>com.nexon.ma</code>(Maple Adventure = 메이플키우기 내부코드).
+          서버 이름(스카니아·루나…)은 원조 메이플스토리에서 가져다 쓴 것이라 겹쳐 보이지만, 위 호스트는
+          모두 <b>메이플키우기</b> 서버입니다.</p>
+        <p class="factnote"><b>정적 분석으로 더 확인됨 (2026-08-27)</b> — 클라이언트 로컬라이제이션에
+          랭킹 데이터 모델이 그대로 들어 있습니다: <code>ENUM.RANKINGTYPE.BATTLEPOWER</code>(전투력 랭킹),
+          <code>RANKINGFILTERTYPE.ALL / CURRENTRANKING</code>(필터), <code>CURSOR</code>(커서 페이징),
+          <code>ERRORTYPE.ALLOCATIONWORLDIDFAILED</code>(worldId 관련). 즉 <b>rankingType · worldId(전체/서버별) ·
+          cursor</b> 형태의 요청이 실재합니다. 서버는 <b>Kestrel · HTTP/2</b>(ASP.NET Core, gRPC 계열로 추정),
+          인증은 <b>넥슨 플랫폼(NP) 로그인</b>. 다만 실제 <b>요청 경로 · 메시지 스키마 · 서명 유무</b>는
+          <code>GameAssembly.dll</code>/<code>global-metadata.dat</code> 를 받아 분석했습니다. 결과:
+          호출은 <code>C1Shared.GetBattlePowerRankingList</code>(cursor·filterType·worldId·creatureIndex),
+          전송은 NXP 네트워크 클라이언트(MemoryPack), 그리고 <b>요청마다 세션키+롤링 nonce 서명 + GSSDK 무결성 검사</b>.
+          아래 4번 결론 참조.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1 도구 -->
+  <section class="step">
+    <div class="sechead"><div class="num">1</div>
+      <div><h2>사용할 캡처 도구</h2>
+        <div class="sub">TLS 본문을 읽으려면 내 PC 에서 내 트래픽을 복호화한다 — 서버 보안을 뚫는 게 아니다</div></div>
+    </div>
+    <p class="lead">전송 형태를 먼저 파악한 뒤(HTTPS 인지, QUIC/UDP 인지, 원시 TCP 인지) 도구를 고릅니다.
+      순서대로 시도하고, 첫 번째로 통하는 것에서 멈춥니다.</p>
+    <div class="tools">
+      <div class="tool">
+        <div class="th"><b>Wireshark</b><span class="tag">전송 파악</span><span class="plat">Windows</span></div>
+        <p>가장 먼저. 랭킹 화면을 여는 순간 <b>어느 호스트·포트로, 어떤 프로토콜이</b> 나가는지 본다 —
+          TCP 443(TLS) 인지, UDP 443(QUIC) 인지, HTTP/2 인지. 본문은 못 읽지만 이 한 번으로 뒤 도구가 정해진다.</p>
+      </div>
+      <div class="tool pri">
+        <div class="th"><b>SSLKEYLOGFILE + Wireshark</b><span class="tag">1순위 시도</span><span class="plat">환경변수</span></div>
+        <p>클라이언트의 HTTP 스택이 <code>SSLKEYLOGFILE</code> 환경변수를 존중하면, 그 파일에 세션 키가 적히고
+          Wireshark 가 그 키로 본문을 <b>복호화</b>한다. <b>클라이언트가 스스로 키를 내주는 방식</b>이라
+          프록시도 CA 설치도 필요 없고 — 인증서 고정과도 무관하다. 가장 깨끗한 길. 되면 여기서 끝.</p>
+      </div>
+      <div class="tool pri">
+        <div class="th"><b>mitmproxy</b><span class="tag">2순위 시도</span><span class="plat">무료 · 스크립트</span></div>
+        <p>SSLKEYLOGFILE 이 안 통하면 시스템 프록시로 트래픽을 돌리고, mitmproxy 의 CA 인증서를
+          <b>내 Windows 신뢰 저장소</b>에 넣는다. 이건 내 기기에서 내 트래픽을 들여다보는 표준 디버깅이지
+          서버 우회가 아니다. <code>mitmweb</code> 로 요청을 눈으로 보고, 필터를 <code>~d *-service.nexon.com</code> 로 건다.</p>
+        <p>대안(같은 원리): <b>Fiddler Classic</b>, <b>Charles</b>, <b>Proxyman</b> — 취향대로.</p>
+      </div>
+    </div>
+    <div class="call"><b>여기서 갈린다.</b> mitmproxy CA 를 넣었는데 클라이언트가 접속에 실패하거나
+      네트워크 오류를 뱉으면 → <b>인증서 고정(pinning)</b>이 걸려 있는 것이다. 그 선을 넘는 방법은
+      고정 우회뿐이고, 그건 이 조사의 범위 밖이다. 아래 <b>P3 관문</b>에서 판정한다.</p>
+  </section>
+
+  <!-- 2 순서 -->
+  <section class="step">
+    <div class="sechead"><div class="num">2</div>
+      <div><h2>구체적인 확인 순서</h2>
+        <div class="sub">각 단계는 실제 순서다 — 앞 단계 결과가 다음 도구·판단을 정한다</div></div>
+    </div>
+    <div class="phases">
+      <div class="phase"><div class="pn"></div><div class="pc">
+        <h4>사전 준비</h4>
+        <p>깨끗한 캡처 환경을 만든다. 다른 앱은 닫아 잡음을 줄이고, 게임 빌드 번호를 적어 둔다
+          (패치되면 요청 형식이 바뀔 수 있다).</p>
+        <div class="out"><b>산출</b> — 캡처 환경 · 게임 버전 기록</div>
+      </div></div>
+      <div class="phase"><div class="pn"></div><div class="pc">
+        <h4>전송 형태 파악 (Wireshark)</h4>
+        <p>게임 실행 → 로그인 → 랭킹 화면 진입. 캡처에서 <code>ma*-service.nexon.com</code> 으로 가는
+          흐름을 찾아 다음을 확정한다:</p>
+        <ul>
+          <li>TCP 443 (TLS) 인가, UDP 443 (QUIC) 인가, 원시 TCP 인가</li>
+          <li>HTTP/1.1 인가 HTTP/2 인가 (TLS ALPN 값)</li>
+          <li>랭킹 진입 시점에 실제로 새 요청이 나가는가</li>
+        </ul>
+        <div class="out"><b>산출</b> — 전송 프로토콜 확정 → 캡처 도구 선택</div>
+      </div></div>
+      <div class="phase"><div class="pn"></div><div class="pc">
+        <h4>복호화 관문 — 여기서 가능/불가가 갈린다</h4>
+        <p>SSLKEYLOGFILE 을 먼저, 안 되면 mitmproxy + CA 를 시도. <b>클라이언트가 평소처럼 붙고
+          랭킹이 정상 표시되면서 본문이 읽히면</b> 통과. 붙지 못하면 고정이 걸린 것 — 중단.</p>
+        <div class="out"><b>산출</b> — 복호화 성공 여부 (실패 시 5번 대체 방안으로)</div>
+      </div></div>
+      <div class="phase"><div class="pn"></div><div class="pc">
+        <h4>제스처별 캡처</h4>
+        <p>복호화가 되면, 각 동작을 <b>하나씩 따로</b> 일으키고 그때 나간 요청에 라벨을 붙인다.
+          이렇게 해야 어떤 요청이 무엇인지 확실해진다:</p>
+        <ul>
+          <li>전투력 랭킹 화면 진입</li>
+          <li>서버(월드) 변경</li>
+          <li>다음 페이지 / 스크롤</li>
+          <li>전체 서버 조회 ↔ 개별 서버 조회 전환</li>
+          <li>특정 캐릭터 눌러 상세정보 열기</li>
+        </ul>
+        <div class="out"><b>산출</b> — 제스처 ↔ 요청 매핑</div>
+      </div></div>
+      <div class="phase"><div class="pn"></div><div class="pc">
+        <h4>구조 기록</h4>
+        <p>각 요청을 아래 <b>3번 양식</b>에 옮긴다. 특히 URL·메서드·본문 필드와 응답 필드,
+          그리고 인증 헤더의 위치·형식을 빠짐없이.</p>
+        <div class="out"><b>산출</b> — 요청/응답 구조 문서</div>
+      </div></div>
+      <div class="phase"><div class="pn"></div><div class="pc">
+        <h4>자동화 판정</h4>
+        <p>기록을 <b>4번 기준</b>에 대입해 GO / NO-GO 를 가른다. GO 여도 그 다음에야 코드를 쓴다.</p>
+        <div class="out"><b>산출</b> — 자동 수집 가능 여부 결론</div>
+      </div></div>
+    </div>
+
+    <div class="gate">
+      <div class="gh"><span class="sig">✕</span>중단 관문 — 인증서 고정이 확인되면 여기서 멈춘다</div>
+      <div class="gb">P3 에서 CA 를 신뢰 저장소에 넣었는데도 클라이언트가 <b>연결 실패·네트워크 오류</b>를
+        낸다면, 앱이 자기 인증서만 신뢰하도록 고정한 것이다. 이걸 넘어서는 유일한 길은 고정 로직을
+        무력화하는 것 — <b>보안 기능 우회</b>이고, 이 조사가 명시적으로 배제한 영역이다. 이 경우
+        조사를 종료하고 <b>5번 대체 방안</b>으로 간다.
+        <div class="test">판정 테스트 — CA 활성 상태에서 게임이 ① 평소처럼 로그인·랭킹 표시되면 <b>통과</b>
+          / ② 접속·통신 오류를 내면 <b>고정 있음 → 중단</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 기록 양식 -->
+  <section class="step">
+    <div class="sechead"><div class="num">3</div>
+      <div><h2>요청·응답 기록 양식</h2>
+        <div class="sub">캡처한 흐름 하나마다 이 표를 채운다</div></div>
+    </div>
+    <p class="lead">조사 대상으로 지정한 필드를 그대로 담았습니다. 값을 옮길 때
+      <b>본인 토큰·캐릭터 식별자 같은 민감 값은 마스킹</b>합니다 — 형식만 알면 됩니다.</p>
+    <div class="form">
+      <div class="frow"><div class="fk">제스처 <span class="req">*</span></div><div class="fv">진입 / 서버변경 / 다음페이지 / 전체·개별 / 상세</div></div>
+      <div class="frow"><div class="fk">Method + URL <span class="req">*</span></div><div class="fv">POST https://makr-service.nexon.com/…</div></div>
+      <div class="frow"><div class="fk">HTTP 버전</div><div class="fv">1.1 / 2 (ALPN)</div></div>
+      <div class="frow"><div class="fk">본문 형식</div><div class="fv">JSON / protobuf / gRPC / 기타</div></div>
+      <div class="frow"><div class="fk">요청 헤더</div><div class="fv">Authorization · 커스텀 서명 헤더 · 기기/세션 헤더</div></div>
+      <div class="frow"><div class="fk">요청 필드</div><div class="fv">worldId · rankingType · page · cursor · limit</div></div>
+      <div class="frow"><div class="fk">응답 필드</div><div class="fv">characterId · nickname · job · level · combatPower · guild · lastLogin</div></div>
+      <div class="frow"><div class="fk">페이지네이션</div><div class="fv">다음 요청이 page++ 인가 cursor 인가 · 마지막 페이지 신호</div></div>
+      <div class="frow"><div class="fk">인증 만료</div><div class="fv">토큰 수명 · 갱신 요청 유무 · 401 재현 여부</div></div>
+      <div class="frow"><div class="fk">서명/기기 종속</div><div class="fv">본문 바꿔 재요청 시 거부되는가 · 헤더에 nonce/timestamp/sig 유무</div></div>
+    </div>
+
+    <div class="fieldset">
+      <h4>추적할 요청 필드</h4>
+      <div class="chips">
+        <span class="fld key">worldId</span><span class="fld key">rankingType</span>
+        <span class="fld key">page</span><span class="fld key">cursor</span><span class="fld key">limit</span>
+      </div>
+    </div>
+    <div class="fieldset">
+      <h4>추적할 응답 필드</h4>
+      <div class="chips">
+        <span class="fld">characterId</span><span class="fld">nickname</span><span class="fld">job</span>
+        <span class="fld">level</span><span class="fld">combatPower</span><span class="fld">guild</span>
+        <span class="fld">lastLogin</span>
+      </div>
+    </div>
+    <p class="formcap">전체 서버 ↔ 개별 서버는 보통 <code>worldId</code> 값(전체 = 특정 상수 or 생략)으로 갈립니다.
+      캐릭터 상세는 목록의 <code>characterId</code> 를 키로 별도 요청을 보내는지 확인합니다.</p>
+  </section>
+
+  <!-- 2.5 라이브 관찰 1회 -->
+  <section class="step">
+    <div class="sechead"><div class="num">▶</div>
+      <div><h2>라이브 관찰 1회 — 이 케이스 전용</h2>
+        <div class="sub">단 하나를 가른다: 랭킹 읽기가 세션만으로 되나, 요청마다 서명이 필요한가</div></div>
+    </div>
+    <p class="lead">정적 분석은 여기서 멈췄습니다. 이 절차는 <b>본인 계정 트래픽을 한 번 관찰</b>하고,
+      내가 만든 요청을 <b>몇 번 재전송</b>해 서버가 무엇을 강제하는지 봅니다.
+      <b>재전송 ≠ 서명 위조</b> — 내 요청을 그대로 다시 보내거나, 서명 헤더를 <b>빼거나</b>,
+      본문만 바꾸고 서명은 <b>안 건드리는</b> 것은 관찰입니다. <b>새 유효 서명을 계산하는 것만</b>이
+      위조이고 그건 하지 않습니다.</p>
+
+    <div class="phases">
+      <div class="phase"><div class="pn"></div><div class="pc">
+        <h4>준비 — 수집 전용 계정 · 공식 클라이언트 · mitmproxy</h4>
+        <p>전용 계정으로 공식 PC 클라이언트에 로그인. mitmproxy 설치. 게임 버전 기록.
+          지역이 스카니아면 대상 호스트는 <code>makr-service.nexon.com</code>.</p>
+      </div></div>
+      <div class="phase"><div class="pn"></div><div class="pc">
+        <h4>복호화 프록시 세우기</h4>
+        <p>mitmproxy CA 를 Windows 신뢰 저장소에 넣고 시스템 프록시를 mitmproxy 로.
+          <code>mitmweb</code> 에서 필터 <code>~d makr-service.nexon.com</code>.
+          (.NET 클라이언트라 SSLKEYLOGFILE 은 안 먹을 확률이 높아 이 경로로 간다.)</p>
+      </div></div>
+      <div class="phase"><div class="pn"></div><div class="pc">
+        <h4>인증서 고정 관문 — 여기서 갈린다</h4>
+        <p>프록시+CA 켠 상태로 로그인 → 전투력 랭킹 진입.
+          <b>정상 연결·표시되면 통과.</b> 연결 실패·인증서 오류면 고정이 걸린 것 —
+          <b>즉시 중단</b>(고정 우회는 금지선). 이 경우 결론은 "관찰 불가 → 공식 클라이언트 필요".</p>
+      </div></div>
+      <div class="phase"><div class="pn"></div><div class="pc">
+        <h4>랭킹 요청 1건 포착</h4>
+        <p>전투력 랭킹을 열고 <b>한 번 스크롤</b>(2페이지=cursor 도 같이 잡히게).
+          mitmweb 에서 랭킹 서비스로 가는 요청을 찾아 기록:</p>
+        <ul>
+          <li>경로 · 메서드 · HTTP/2 여부</li>
+          <li>요청 헤더 — <b>인증 토큰</b> 헤더와, <b>서명/nonce</b> 헤더(x-signature·x-nonce·x-toy·x-gssdk 류)</li>
+          <li>본문(MemoryPack 바이너리 — 디코딩 없이 바이트째로 다뤄도 됨)</li>
+          <li>응답 상태·크기·랭킹 행 포함 여부</li>
+        </ul>
+      </div></div>
+    </div>
+
+    <div class="gate" style="border-color:color-mix(in srgb,var(--go) 45%,transparent);background:var(--go-soft)">
+      <div class="gh" style="color:var(--go);border-bottom-color:color-mix(in srgb,var(--go) 25%,transparent)">
+        <span class="sig" style="background:var(--go)">=</span>결정 테스트 — 재전송 3종 (위조 없음)</div>
+      <div class="gb">mitmproxy 의 replay 또는 포착한 헤더/본문으로 <b>내 요청을 다시 보낸다</b>. 각 테스트 결과가 답이다.
+        <div class="test" style="margin-top:11px"><b>T1 · 그대로 재전송</b> (토큰·서명·본문 전부 원본)<br>
+          200+동일 데이터 → 재전송 성립 / 401·서명오류 → nonce 1회성·시간종속 = <b>요청 서명 강제 신호</b></div>
+        <div class="test" style="margin-top:8px"><b>T2 · 서명만 제거</b> (인증 토큰은 유지, 서명/nonce 헤더 삭제)<br>
+          200 → <b style="color:var(--go)">세션 토큰만으로 충분 → 전용 계정 세션 수집 가능</b> /
+          401·서명필요 → 서명 강제</div>
+        <div class="test" style="margin-top:8px"><b>T3 · cursor만 변경, 서명은 원본 유지</b> (다음 페이지로 본문만 수정)<br>
+          200+2페이지 → 본문이 서명에 안 묶임 = 세션으로 페이지네이션 가능 /
+          본문·서명 불일치 오류 → <b>본문이 서명에 묶임 → 클라이언트 필요</b><br>
+          <span style="opacity:.8">※ T3 는 서명을 <b>다시 계산하지 않는다</b>. 원본 서명을 그대로 두고 서버가 거부하는지만 본다 — 위조 아님.</span></div>
+      </div>
+    </div>
+
+    <div class="form" style="margin-top:20px">
+      <div class="frow"><div class="fk" style="color:var(--ink-3)">결과 조합</div><div class="fv" style="color:var(--ink-3)">판정</div></div>
+      <div class="frow"><div class="fk">T2 = 200</div><div class="fv" style="color:var(--go)">세션 토큰만으로 수집 가능 → 발견-누적형 자체 DB 실현 가능</div></div>
+      <div class="frow"><div class="fk">T2 실패 · T1 성공</div><div class="fv">서명은 붙지만 재사용 가능 — 조건부(캡처 재사용). 실용성 낮음</div></div>
+      <div class="frow"><div class="fk">T1·T2·T3 모두 실패</div><div class="fv" style="color:var(--stop)">요청 서명 강제 → 공식 클라이언트 실행 상태에서만 가능</div></div>
+      <div class="frow"><div class="fk">P3 에서 고정</div><div class="fv" style="color:var(--stop)">관찰 자체 불가 → 우회 없이는 판정 불가</div></div>
+    </div>
+
+    <div class="call" style="margin-top:20px">이 관찰이 <b>세션 OK</b> 로 끝나면, 그때 비로소 <b>발견-누적</b> 경로를 설계합니다:
+      <code>랭킹 리스트 → characterId → GetGuildMemberList·SearchNick 확장 → GetBriefUserInfoList(공개 프로필) →
+      자체 DB 저장 → 주기 갱신 → 재정렬</code>. 그 단계에서도 요청량은 예의 있게(레이트리밋 준수),
+      전용 계정, 대량 병렬 금지로 갑니다. 지금은 <b>관찰 1회</b>까지만.</div>
+  </section>
+
+  <!-- 4 판단 기준 -->
+  <section class="step">
+    <div class="sechead"><div class="num">4</div>
+      <div><h2>자동 수집 가능 여부 판단 기준</h2>
+        <div class="sub">범위(본인 계정 · 우회 없음) 안에서 되는지를 가른다</div></div>
+    </div>
+    <p class="lead">핵심 질문 하나: <b>“본인이 정상 로그인으로 얻은 토큰만으로, 화면에 보이는 공개 랭킹을
+      페이지 넘겨가며 읽을 수 있는가?”</b> 이게 되면 GO, 각 요청이 클라이언트에 묶인 서명을 요구하면 NO-GO.</p>
+
+    <div class="form" style="margin-bottom:22px">
+      <div class="frow"><div class="fk" style="color:var(--ink-3)">조사 항목</div><div class="fv" style="color:var(--ink-3)">클라이언트 바이너리 분석 후 확정 (2026-08-27)</div></div>
+      <div class="frow"><div class="fk">1 공개 무인증 EP</div><div class="fv">없음 — 랭킹은 서명된 NXP API 파이프라인만 통함. 별도 공개 REST/웹 호스트 없음</div></div>
+      <div class="frow"><div class="fk">2 세션 토큰 EP</div><div class="fv">확정 — <code>C1Shared.GetBattlePowerRankingList</code> · <code>RequestRankingListAsync</code></div></div>
+      <div class="frow"><div class="fk">3 커서 요청</div><div class="fv">확정 — cursor + count/limit, 클라이언트가 페이지 이어붙임(AddedRankingListAsync)</div></div>
+      <div class="frow"><div class="fk">4 전서버/서버별</div><div class="fv">확정 — filterType(ALL) + worldId, 직업별은 creatureIndex</div></div>
+      <div class="frow"><div class="fk">5 1회 반환 수</div><div class="fv">count/limit/pageSize 로 지정, cursor 로 전체 열람 구조 — 상위만이 아님. 서버 상한값은 라이브 1회 필요</div></div>
+      <div class="frow"><div class="fk">6 캐릭터 프로필</div><div class="fv">RankerInfo 행 + 동일 서명 API 계열. 인증·서명 뒤</div></div>
+      <div class="frow"><div class="fk">7 클라이언트 전용</div><div class="fv"><b style="color:var(--stop)">사실상 예</b> — 요청마다 세션키+롤링 nonce 서명(GSSDK·무결성검사·NxLog). 클라이언트만 유효 요청 생성</div></div>
+    </div>
+
+    <div class="gate" style="border-color:color-mix(in srgb,var(--gate) 50%,transparent);background:var(--gate-soft)">
+      <div class="gh" style="color:var(--gate);border-bottom-color:color-mix(in srgb,var(--gate) 25%,transparent)">
+        <span class="sig" style="background:var(--gate)">?</span>결론 — 추가 자료 필요 (라이브 관찰 1회)</div>
+      <div class="gb">정적 분석은 여기까지가 끝이고, <b>"불가능"에 부딪히지 않았습니다.</b> 클라이언트에는
+        <code>GetBattlePowerRankingList</code>(cursor·worldId·filterType 페이징) → <code>GetGuildMemberList</code> ·
+        <code>SearchNick</code> 로 characterId 확장 → <code>GetBriefUserInfoList</code>(공개 프로필·외형) 까지,
+        <b>발견-누적형 자체 DB 를 만들 API 구성요소가 정상 기능으로 실재</b>합니다. 인증은 본인 전용 계정의
+        정상 로그인(NpToken→GameToken→SessionKey)으로 재현 가능합니다.
+        <div class="test">남은 단 하나의 질문 — <b>이 호출들이 유효 세션만으로 되는가, 아니면 요청마다 클라이언트가
+          만드는 서명을 요구하는가.</b> 서명 인프라(SessionKey·NextSignatureNonce·GSSDK)는 존재하지만, 랭킹
+          <b>읽기</b> 호출에 그것이 강제되는지는 정적 문자열로 확정 못 합니다. <b>본인 계정 라이브 관찰 1회</b>로
+          갈립니다: 세션만으로 되면 <span style="color:var(--go)">전용 계정 세션 수집 가능</span>,
+          서명 필요면 <span style="color:var(--stop)">공식 클라이언트 실행 필요</span>. 그 전엔 어느 쪽도 단정하지 않습니다.</div>
+      </div>
+    </div>
+    </div>
+    <div class="decide">
+      <div class="dcol go">
+        <div class="dh"><span class="dot"></span>GO — 범위 안에서 가능</div>
+        <ul>
+          <li>P3 <b>복호화 통과</b> (고정 없음)</li>
+          <li>랭킹이 <b>Bearer 토큰 하나</b>로 읽힌다 — 본인 로그인으로 얻은 그 토큰</li>
+          <li>토큰 <b>만료·갱신 방식이 관찰</b >되어 재현 가능</li>
+          <li>페이지네이션이 <b>파라미터화</b>됨 (page/cursor/limit 를 내가 바꿔 넣을 수 있다)</li>
+          <li>본문을 바꿔 재요청해도 <b>서명 거부가 없다</b></li>
+        </ul>
+      </div>
+      <div class="dcol no">
+        <div class="dh"><span class="dot"></span>NO-GO — 범위 안에서는 불가</div>
+        <ul>
+          <li><b>인증서 고정</b>으로 P3 자체가 막힘</li>
+          <li>요청마다 <b>본문+nonce+시각 HMAC 서명</b>이 붙고, 그 키가 클라이언트에 박혀 있다
+            → 재현하려면 서명 로직을 뜯어야 함(우회)</li>
+          <li>토큰이 <b>실시간 기기/세션 하트비트에 종속</b> — 클라이언트가 살아 있어야만 유효</li>
+          <li>응답이 TLS 안에서 다시 <b>암호화된 불투명 블롭</b></li>
+        </ul>
+      </div>
+    </div>
+    <div class="call">경계는 <b>“내 토큰으로 공개 데이터를 읽기”</b>와 <b>“클라이언트의 서명·인증을 재현하기”</b>
+      사이에 있습니다. 앞은 내 세션으로 열려 있는 걸 읽는 것 — 범위 안. 뒤는 보안 기능을 복제하는 것 — 범위 밖.
+      토큰 만료 시 <b>본인이 다시 로그인해 갱신</b>하는 건 유지비일 뿐 우회가 아닙니다.</p>
+  </section>
+
+  <!-- 5 대체 -->
+  <section class="step">
+    <div class="sechead"><div class="num">5</div>
+      <div><h2>불가능할 때의 대체 방안</h2>
+        <div class="sub">NO-GO 로 판정돼도 랭킹 자리를 채우는 길</div></div>
+    </div>
+    <div class="fbs">
+      <div class="fb"><div class="fi">A</div>
+        <div class="ft"><b>공개 정보사이트 파싱 — mgf.gg 전체 랭킹</b>
+          <p>이미 구현·검증됨. mgf.gg 가 <code>?page=N</code> 로 전체 사다리를 공개해 원하는 깊이만큼
+            수집(기본 600명). 화면에 출처·수집 시각 표기, 자동 갱신 워크플로 연결됨.</p></div>
+        <span class="fs done">구현 완료</span></div>
+      <div class="fb"><div class="fi">B</div>
+        <div class="ft"><b>등록형 보드 — 각자 자기 기록 등록</b>
+          <p>서버 없이 링크 공유로 공유되는 전투력·길드·인기도 보드. 길드·친구 단위. 자기 신고.</p></div>
+        <span class="fs done">구현 완료</span></div>
+      <div class="fb"><div class="fi">C</div>
+        <div class="ft"><b>데이터 제휴 요청 — mgf.gg / 메키픽</b>
+          <p>동의를 받으면 전체 랭킹을 정당하게. 연락처는 수집기 설정 파일에. 메일 초안 지원 가능.</p></div>
+        <span class="fs ready">즉시 착수</span></div>
+      <div class="fb"><div class="fi">D</div>
+        <div class="ft"><b>넥슨 오픈 API 요청 — 메이플키우기 공식 포럼</b>
+          <p>메이플키우기는 아직 오픈 API 가 없다. 다만 <b>형제 게임인 원조 메이플스토리</b>엔 이미
+            있어 전례가 되니, 포럼에 건의할 근거가 된다. 열리면 그날 바로 연결.</p></div>
+        <span class="fs ext">외부 의존</span></div>
+      <div class="fb"><div class="fi">E</div>
+        <div class="ft"><b>본인 캐릭터만 가져오기 — 스탯 자동 입력용</b>
+          <p>남의 데이터가 아닌 본인 데이터라 성격이 다름. 랭킹은 안 되지만 지금 수동 입력하는 스탯 채우기에 사용.</p></div>
+        <span class="fs ext">별도 검토</span></div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p><b>범위 재확인</b> — 이 프로토콜은 본인 PC 클라이언트가 본인 계정으로 정상 표시하는 트래픽만
+      관찰합니다. 인증서 고정·암호화·인증·기타 보안 기능의 우회는 어느 단계에서도 하지 않으며,
+      P3 관문에서 고정이 확인되면 조사를 종료합니다.</p>
+    <p><b>참고</b> — 랭킹은 게임 안에서 누구나 보는 공개 정보입니다. 반면 넥슨 오픈 API 약관 8.15 는
+      authorized use 밖의 자동 질의·크롤링을 제한합니다. GO 로 판정돼 구현으로 넘어가기 전에,
+      수집 규모·주기·재배포 방식이 이용약관과 어긋나지 않는지 별도로 확인하십시오. 이 문서는
+      기술 절차서이며 법률 자문이 아닙니다.</p>
+  </footer>
+</main>
+
+<script>
+(function(){
+  var r=document.documentElement, sv=null;
+  try{ sv=localStorage.getItem("prot-theme"); }catch(e){}
+  if(sv) r.setAttribute("data-theme",sv);
+  document.getElementById("theme").addEventListener("click",function(){
+    var cur=r.getAttribute("data-theme");
+    var sysLight=matchMedia&&matchMedia("(prefers-color-scheme: light)").matches;
+    var eff=cur||(sysLight?"light":"dark");
+    var nx=eff==="dark"?"light":"dark";
+    r.setAttribute("data-theme",nx);
+    try{ localStorage.setItem("prot-theme",nx); }catch(e){}
+  });
+})();
+</script>

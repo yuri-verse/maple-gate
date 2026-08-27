@@ -1,0 +1,482 @@
+<title>메이플키우기 랭킹</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0C1016; --surface:#141A22; --surface-2:#1A2029; --surface-3:#232B36;
+  --line:#222932; --line-2:#323C49;
+  --ink:#E8EEF4; --ink-2:#A0AEBD; --ink-3:#6B798A;
+  --accent:#E9A13B; --accent-ink:#FFC272; --accent-soft:#33260F; --on-accent:#181005;
+  --pass:#35C08A; --warn:#E9A13B; --fail:#EF5C5C;
+  --pass-soft:#0E2B22; --warn-soft:#33260F; --fail-soft:#331A1A;
+  --fam-warrior:#E5825C; --fam-mage:#79A7F5; --fam-archer:#4FC98D; --fam-thief:#B08CF0;
+  --shadow:0 1px 2px rgba(0,0,0,.45), 0 14px 34px -20px rgba(0,0,0,.95);
+}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
+  color-scheme:light;
+  --bg:#EFF1F4; --surface:#FFFFFF; --surface-2:#F5F7F9; --surface-3:#E7ECF0;
+  --line:#DCE2E8; --line-2:#C6CFD8;
+  --ink:#121820; --ink-2:#4A5866; --ink-3:#7C8A99;
+  --accent:#B4741A; --accent-ink:#8A5709; --accent-soft:#FAEDD6; --on-accent:#FFFFFF;
+  --pass:#0E8A61; --warn:#B4741A; --fail:#C2423B;
+  --pass-soft:#DFF1EA; --warn-soft:#FAEDD6; --fail-soft:#F9E3E1;
+  --fam-warrior:#B84E2D; --fam-mage:#3B6ED0; --fam-archer:#1F8C5E; --fam-thief:#7A52C4;
+  --shadow:0 1px 2px rgba(16,22,25,.05), 0 8px 24px -14px rgba(16,22,25,.22);
+} }
+*{box-sizing:border-box}
+body{margin:0; background:var(--bg); color:var(--ink); font-size:15px; line-height:1.6;
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo",system-ui,sans-serif; -webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0; letter-spacing:-.02em; font-weight:700}
+p{margin:0}
+button,input,select{font:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px}
+.num{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+.wrap{max-width:1080px; margin:0 auto; padding:0 22px}
+
+.top{position:sticky; top:0; z-index:20; background:var(--bg); border-bottom:1px solid var(--line)}
+.top .wrap{display:flex; align-items:center; gap:14px; height:58px}
+.brand{display:flex; align-items:baseline; gap:9px; margin-right:auto}
+.brand b{font-size:15.5px}
+.brand span{font-size:11px; color:var(--ink-3); letter-spacing:.07em; text-transform:uppercase}
+.linkout{font-size:12.5px; color:var(--accent-ink); text-decoration:none}
+.linkout:hover{text-decoration:underline}
+
+.tabs{display:flex; gap:2px; border-bottom:1px solid var(--line)}
+.tab{padding:11px 15px 10px; border:0; background:transparent; cursor:pointer; font-size:13.5px;
+  color:var(--ink-3); border-bottom:2px solid transparent}
+.tab:hover{color:var(--ink-2)}
+.tab[aria-selected="true"]{color:var(--ink); font-weight:600; border-bottom-color:var(--accent)}
+
+.sec{padding:24px 0 60px; display:grid; gap:22px}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:11px; box-shadow:var(--shadow)}
+.card-h{padding:14px 18px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:11px; flex-wrap:wrap}
+.card-h h2{font-size:15px}
+.card-h .sub{font-size:11.5px; color:var(--ink-3); margin-left:auto}
+.card-b{padding:18px; display:grid; gap:14px}
+
+.fields{display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.f{display:grid; gap:5px}
+.f label{font-size:11.5px; color:var(--ink-2)}
+.f input,.f select{width:100%; padding:9px 11px; border-radius:8px; border:1px solid var(--line-2);
+  background:var(--surface-2); font-size:13.5px}
+.f input.num{text-align:right}
+.f input:focus,.f select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+.jobpick{display:grid; grid-template-columns:repeat(auto-fill,minmax(76px,1fr)); gap:7px}
+.jb{--jc:var(--ink-3); display:grid; gap:5px; justify-items:center; padding:7px 4px 6px; cursor:pointer;
+  border:1px solid var(--line); border-radius:9px; background:var(--surface-2); color:var(--ink-2)}
+.jb[data-fam="전사"]{--jc:var(--fam-warrior)} .jb[data-fam="법사"]{--jc:var(--fam-mage)}
+.jb[data-fam="궁수"]{--jc:var(--fam-archer)} .jb[data-fam="도적"]{--jc:var(--fam-thief)}
+.jb:hover{border-color:var(--jc); background:var(--surface)}
+.jb[aria-checked="true"]{border-color:var(--jc); background:var(--surface); box-shadow:inset 0 0 0 1px var(--jc)}
+.jb[aria-checked="true"] i{color:var(--ink); font-weight:600}
+.jb span{width:40px; height:40px; border-radius:8px; overflow:hidden; display:grid; place-items:center;
+  background:color-mix(in srgb, var(--jc) 12%, var(--surface));
+  box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--jc) 30%, transparent)}
+.jb span img{width:100%; height:100%; object-fit:cover; display:block}
+.jb i{font-style:normal; font-size:11px; line-height:1.2; text-align:center}
+
+.btn{padding:10px 16px; border-radius:9px; border:1px solid var(--line-2); background:var(--surface);
+  color:var(--ink-2); font-size:13px; font-weight:600; cursor:pointer}
+.btn:hover{border-color:var(--ink-3); color:var(--ink)}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45; cursor:default}
+.row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+
+table{width:100%; border-collapse:collapse; font-size:13.5px}
+.tscroll{overflow-x:auto}
+th{text-align:left; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3);
+  font-weight:600; padding:0 14px 9px; white-space:nowrap; border-bottom:1px solid var(--line)}
+td{padding:10px 14px; border-bottom:1px solid var(--line); white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td.n{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+tbody tr.me{background:var(--accent-soft)}
+.rk{display:inline-grid; place-items:center; min-width:24px; padding:3px 6px; border-radius:6px;
+  font-family:"IBM Plex Mono",monospace; font-size:12px; font-weight:600; color:var(--ink-3)}
+tr.g1 .rk{background:var(--accent); color:var(--on-accent)}
+tr.g2 .rk{background:var(--ink-2); color:var(--bg)}
+tr.g3 .rk{background:#C87F4A; color:#1b1207}
+.who{display:flex; align-items:center; gap:10px}
+.who span{width:34px;height:34px;border-radius:7px;overflow:hidden;background:var(--surface-2);
+  display:grid;place-items:center; flex:0 0 34px; box-shadow:inset 0 0 0 1px var(--line)}
+.who span img{width:100%;height:100%;object-fit:cover;display:block}
+.who b{font-weight:600}
+.who small{display:block; font-size:11px; color:var(--ink-3); font-weight:400}
+.del{border:0;background:transparent;color:var(--ink-3);cursor:pointer;font-size:12px;padding:2px 6px}
+.del:hover{color:var(--fail)}
+
+.bars{display:grid; gap:9px}
+.bar{display:grid; grid-template-columns:34px minmax(0,1fr) 1fr 96px; gap:11px; align-items:center}
+.bar.noico{grid-template-columns:minmax(0,1fr) 1fr 96px}
+.bar span.ic{width:34px;height:34px;border-radius:7px;overflow:hidden;background:var(--surface-2)}
+.bar span.ic img{width:100%;height:100%;object-fit:cover;display:block}
+.bar .bn{font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.bar .bt{height:8px; border-radius:99px; background:var(--surface-3); overflow:hidden; position:relative}
+.bar .bt i{position:absolute; inset:0 auto 0 0; border-radius:99px; background:var(--accent)}
+.bar .bv{text-align:right; font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-2)}
+
+.note{display:flex; gap:9px; padding:11px 13px; border-radius:9px; font-size:12.5px; line-height:1.55}
+.note.ok{background:var(--pass-soft); color:var(--pass)}
+.note.warn{background:var(--warn-soft); color:var(--warn)}
+.note.bad{background:var(--fail-soft); color:var(--fail)}
+.note.neutral{background:var(--surface-2); color:var(--ink-2)}
+.empty{padding:26px 18px; text-align:center; color:var(--ink-3); font-size:13px; line-height:1.7}
+.hint{font-size:11.5px; color:var(--ink-3); line-height:1.6}
+.hint b{color:var(--ink-2)}
+[hidden]{display:none !important}
+</style>
+
+<header class="top"><div class="wrap">
+  <div class="brand"><b>메이플키우기 랭킹</b><span>등록형 보드</span></div>
+  <a class="linkout" id="portalLink" href="#" target="_blank" rel="noopener">스테이지 게이트 →</a>
+</div></header>
+
+<div class="wrap">
+  <div class="tabs" id="tabs" role="tablist">
+    <button class="tab" data-t="cp"    role="tab" aria-selected="true">전투력</button>
+    <button class="tab" data-t="guild" role="tab" aria-selected="false">길드</button>
+    <button class="tab" data-t="pop"   role="tab" aria-selected="false">인기도</button>
+  </div>
+
+  <div class="sec">
+    <section class="card" id="regCard">
+      <div class="card-h"><h2>내 기록 등록</h2><span class="sub" id="regSub">—</span></div>
+      <div class="card-b">
+        <div class="fields">
+          <div class="f"><label for="fName">닉네임</label><input id="fName" maxlength="16" placeholder="게임 닉네임"></div>
+          <div class="f"><label for="fGuild">길드 (없으면 비워두세요)</label><input id="fGuild" maxlength="16" placeholder="길드명"></div>
+          <div class="f"><label for="fCp">전투력</label><input class="num" id="fCp" inputmode="decimal" placeholder="예: 2.4경 또는 24021000000000000"></div>
+          <div class="f"><label for="fStage">도달 스테이지</label><input id="fStage" maxlength="8" placeholder="예: 36-7"></div>
+        </div>
+        <div>
+          <label class="hint" style="display:block;margin-bottom:7px">직업</label>
+          <div class="jobpick" id="jobPick" role="radiogroup" aria-label="직업"></div>
+        </div>
+        <div class="row">
+          <button class="btn primary" type="button" id="btnSave">등록</button>
+          <button class="btn" type="button" id="btnClear">지우기</button>
+          <span class="hint" id="saveMsg"></span>
+        </div>
+        <p class="hint">등록하면 <b>이 페이지의 새 버전으로 저장</b>되어 이 링크를 가진 모두에게 보입니다.
+          같은 닉네임으로 다시 등록하면 기존 기록을 덮어씁니다.
+          전투력은 <b>자기 신고</b>입니다 — 검증할 방법이 없으니 그대로 믿지는 마세요.</p>
+      </div>
+    </section>
+
+    <section class="card" id="pCp">
+      <div class="card-h"><h2>전투력 랭킹</h2><span class="sub" id="cpSub">—</span></div>
+      <div class="tscroll">
+        <table><thead><tr>
+          <th style="width:52px">순위</th><th>플레이어</th><th>길드</th>
+          <th style="text-align:right">전투력</th><th style="text-align:right">도달</th><th></th>
+        </tr></thead><tbody id="cpBody"></tbody></table>
+      </div>
+      <div class="empty" id="cpEmpty" hidden></div>
+    </section>
+
+    <section class="card" id="pGuild" hidden>
+      <div class="card-h"><h2>길드 랭킹</h2><span class="sub">등록된 인원 기준 · 평균 전투력 순</span></div>
+      <div class="tscroll">
+        <table><thead><tr>
+          <th style="width:52px">순위</th><th>길드</th><th style="text-align:right">인원</th>
+          <th style="text-align:right">평균 전투력</th><th style="text-align:right">합계</th>
+          <th style="text-align:right">최고</th>
+        </tr></thead><tbody id="gBody"></tbody></table>
+      </div>
+      <div class="empty" id="gEmpty" hidden></div>
+    </section>
+
+    <section class="card" id="pPop" hidden>
+      <div class="card-h"><h2>인기도</h2><span class="sub">등록된 기록에서 집계</span></div>
+      <div class="card-b">
+        <div><h3 style="font-size:13px;margin-bottom:11px">직업 채택률</h3><div class="bars" id="popJob"></div></div>
+        <div><h3 style="font-size:13px;margin:6px 0 11px">직업군</h3><div class="bars" id="popFam"></div></div>
+        <div><h3 style="font-size:13px;margin:6px 0 11px">도달 챕터 분포</h3><div class="bars" id="popCh"></div></div>
+      </div>
+      <div class="empty" id="popEmpty" hidden></div>
+    </section>
+
+    <p class="hint" id="foot"></p>
+  </div>
+</div>
+
+<script id="shell" type="text/plain">{{SHELL}}</script>
+<script id="state" type="application/json">{{STATE}}</script>
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>[].slice.call(document.querySelectorAll(s));
+const STATE=JSON.parse($("#state").textContent||"{}");
+const ICONS=STATE.icons||{}, JOBS=STATE.jobs||[], PORTAL=STATE.portal||"";
+let BOARD=(STATE.board||[]).slice();
+let canWrite=null;                 // null = 아직 모름
+let API=null;
+
+/* ---------- 표기 ---------- */
+const UNITS=[[1e24,"자"],[1e20,"해"],[1e16,"경"],[1e12,"조"],[1e8,"억"],[1e4,"만"]];
+function fmt(n){
+  if(n==null||!isFinite(n)) return "—";
+  if(n===0) return "0";
+  const a=Math.abs(n);
+  for(const u of UNITS) if(a>=u[0]){const v=n/u[0]; return (v>=100?v.toFixed(0):v>=10?v.toFixed(1):v.toFixed(2))+u[1];}
+  return Math.round(n).toLocaleString("ko-KR");
+}
+/* "2.4경", "24021조", "2.4e16", "24021000000000000" 전부 받는다 */
+function parseCp(s){
+  s=String(s||"").trim().replace(/[,\s]/g,"");
+  if(!s) return NaN;
+  const m=s.match(/^([0-9.]+)(자|해|경|조|억|만)?$/);
+  if(m){
+    const v=parseFloat(m[1]); if(!isFinite(v)) return NaN;
+    const U={"만":1e4,"억":1e8,"조":1e12,"경":1e16,"해":1e20,"자":1e24};
+    return m[2]? v*U[m[2]] : v;
+  }
+  const v=Number(s); return isFinite(v)?v:NaN;
+}
+const jobOf=id=>JOBS.find(j=>j.id===id)||null;
+const icoOf=id=>ICONS[id]?'<img src="'+ICONS[id]+'" alt="">':"";
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------- 탭 ---------- */
+let TAB="cp";
+function showTab(t){
+  TAB=t;
+  $("#pCp").hidden=t!=="cp"; $("#pGuild").hidden=t!=="guild"; $("#pPop").hidden=t!=="pop";
+  $$("#tabs .tab").forEach(b=>b.setAttribute("aria-selected", b.dataset.t===t?"true":"false"));
+}
+$("#tabs").addEventListener("click",e=>{const b=e.target.closest(".tab"); if(b) showTab(b.dataset.t);});
+
+/* ---------- 등록 폼 ---------- */
+let pickJob=JOBS.length?JOBS[0].id:"";
+(function(){
+  const box=$("#jobPick"), ORD=["전사","법사","궁수","도적"];
+  JOBS.slice().sort((a,b)=>ORD.indexOf(a.fam)-ORD.indexOf(b.fam)).forEach(j=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="jb"; b.dataset.id=j.id; b.dataset.fam=j.fam;
+    b.setAttribute("role","radio"); b.setAttribute("aria-checked", j.id===pickJob?"true":"false");
+    b.title=j.ko+" · "+j.fam;
+    b.innerHTML='<span>'+icoOf(j.id)+'</span><i></i>';
+    b.querySelector("i").textContent=j.ko;
+    b.addEventListener("click",()=>{
+      pickJob=j.id;
+      $$("#jobPick .jb").forEach(x=>x.setAttribute("aria-checked", x.dataset.id===j.id?"true":"false"));
+    });
+    box.appendChild(b);
+  });
+})();
+function setJobPick(id){
+  if(!jobOf(id)) return;
+  pickJob=id;
+  $$("#jobPick .jb").forEach(x=>x.setAttribute("aria-checked", x.dataset.id===id?"true":"false"));
+}
+
+/* 포털에서 넘어온 값 채우기: #reg=<base64 json> */
+(function(){
+  if(PORTAL) $("#portalLink").href=PORTAL;
+  let h=location.hash||"";
+  const m=h.match(/reg=([A-Za-z0-9+/=_-]+)/);
+  if(!m) return;
+  try{
+    const b=m[1].replace(/-/g,"+").replace(/_/g,"/");
+    const j=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b),c=>c.charCodeAt(0))));
+    if(j.job) setJobPick(j.job);
+    if(j.cp) $("#fCp").value=String(j.cp);
+    if(j.stage) $("#fStage").value=j.stage;
+    $("#regSub").textContent="스테이지 게이트에서 넘어온 값이 채워졌습니다";
+  }catch(e){}
+})();
+
+/* 이 브라우저가 마지막에 등록한 이름 — 내 줄을 표시하는 데만 쓴다 */
+const MEKEY="mkr-board-me";
+const myName=()=>{ try{ return localStorage.getItem(MEKEY)||""; }catch(e){ return ""; } };
+
+function collect(){
+  const name=$("#fName").value.trim();
+  const cp=parseCp($("#fCp").value);
+  if(!name) return {err:"닉네임을 넣으세요."};
+  if(!isFinite(cp)||cp<=0) return {err:"전투력을 숫자로 넣으세요. ‘2.4경’ 같은 표기도 됩니다."};
+  if(!pickJob) return {err:"직업을 고르세요."};
+  return {e:{n:name, g:$("#fGuild").value.trim(), j:pickJob, cp:cp,
+             s:$("#fStage").value.trim(), t:Date.now()},
+          raw:$("#fCp").value.trim()};
+}
+
+/* ---------- 렌더 ---------- */
+function render(){
+  const me=myName();
+  /* 전투력 */
+  const rows=BOARD.slice().sort((a,b)=>b.cp-a.cp);
+  const tb=$("#cpBody"); tb.textContent="";
+  $("#cpEmpty").hidden=rows.length>0;
+  $("#cpEmpty").textContent="아직 등록된 기록이 없습니다. 위에서 첫 기록을 올려보세요.";
+  $("#cpSub").textContent=rows.length? (rows.length+"명 등록 · 1위 "+fmt(rows[0].cp)) : "0명";
+  rows.forEach((e,i)=>{
+    const j=jobOf(e.j), tr=document.createElement("tr");
+    tr.className=(i<3?("g"+(i+1)+" "):"")+(me&&e.n===me?"me":"");
+    tr.innerHTML='<td><span class="rk"></span></td>'
+      +'<td><div class="who"><span></span><div><b></b><small></small></div></div></td>'
+      +'<td></td><td class="n"></td><td class="n"></td><td style="text-align:right"></td>';
+    const c=tr.children;
+    c[0].firstChild.textContent=i+1;
+    c[1].querySelector("span").innerHTML=icoOf(e.j);
+    c[1].querySelector("b").textContent=e.n;
+    c[1].querySelector("small").textContent=j?(j.ko+" · "+j.fam):"—";
+    c[2].textContent=e.g||"—";
+    c[3].textContent=fmt(e.cp);
+    c[4].textContent=e.s||"—";
+    if(canWrite){
+      const d=document.createElement("button");
+      d.className="del"; d.type="button"; d.textContent="삭제"; d.title="이 기록 지우기";
+      d.addEventListener("click",()=>remove(e));
+      c[5].appendChild(d);
+    }
+    tb.appendChild(tr);
+  });
+
+  /* 길드 */
+  const G={};
+  BOARD.forEach(e=>{ const k=(e.g||"").trim(); if(!k) return;
+    (G[k]=G[k]||[]).push(e); });
+  const gs=Object.keys(G).map(k=>{
+    const a=G[k], sum=a.reduce((s,x)=>s+x.cp,0);
+    return {g:k, n:a.length, sum:sum, avg:sum/a.length, max:Math.max.apply(null,a.map(x=>x.cp))};
+  }).sort((a,b)=>b.avg-a.avg);
+  const gb=$("#gBody"); gb.textContent="";
+  $("#gEmpty").hidden=gs.length>0;
+  $("#gEmpty").textContent="길드명을 적은 기록이 아직 없습니다.";
+  gs.forEach((r,i)=>{
+    const tr=document.createElement("tr");
+    tr.className=i<3?("g"+(i+1)):"";
+    tr.innerHTML='<td><span class="rk"></span></td><td></td><td class="n"></td>'
+      +'<td class="n"></td><td class="n"></td><td class="n"></td>';
+    const c=tr.children;
+    c[0].firstChild.textContent=i+1;
+    c[1].textContent=r.g; c[2].textContent=r.n+"명";
+    c[3].textContent=fmt(r.avg); c[4].textContent=fmt(r.sum); c[5].textContent=fmt(r.max);
+    gb.appendChild(tr);
+  });
+
+  /* 인기도 */
+  const has=BOARD.length>0;
+  $("#popEmpty").hidden=has;
+  $("#popEmpty").textContent="집계할 기록이 없습니다.";
+  const bars=(box,list,total,ico)=>{
+    box.textContent="";
+    list.forEach(r=>{
+      const w=document.createElement("div"); w.className="bar"+(ico?"":" noico");
+      w.innerHTML=(ico?'<span class="ic"></span>':"")+'<div class="bn"></div>'
+        +'<div class="bt"><i></i></div><div class="bv"></div>';
+      if(ico) w.querySelector(".ic").innerHTML=icoOf(r.k);
+      w.querySelector(".bn").textContent=r.label;
+      w.querySelector(".bt i").style.width=(total?r.v/total*100:0).toFixed(1)+"%";
+      w.querySelector(".bv").textContent=r.v+"명 · "+(total?Math.round(r.v/total*100):0)+"%";
+      box.appendChild(w);
+    });
+  };
+  const cnt=(fn)=>{ const m={}; BOARD.forEach(e=>{const k=fn(e); if(k==null) return; m[k]=(m[k]||0)+1;}); return m; };
+  const jm=cnt(e=>e.j);
+  bars($("#popJob"), Object.keys(jm).map(k=>({k:k,label:(jobOf(k)||{ko:k}).ko,v:jm[k]}))
+        .sort((a,b)=>b.v-a.v), BOARD.length, true);
+  const fm=cnt(e=>{const j=jobOf(e.j); return j?j.fam:null;});
+  bars($("#popFam"), Object.keys(fm).map(k=>({k:k,label:k,v:fm[k]})).sort((a,b)=>b.v-a.v), BOARD.length, false);
+  const cm=cnt(e=>{const m=String(e.s||"").match(/^(\d+)/); return m?("챕터 "+m[1]):null;});
+  bars($("#popCh"), Object.keys(cm).map(k=>({k:k,label:k,v:cm[k]}))
+        .sort((a,b)=>parseInt(b.k.slice(3),10)-parseInt(a.k.slice(3),10)), BOARD.length, false);
+
+  $("#foot").innerHTML="등록 "+BOARD.length+"명 · 길드 "+gs.length+"개. "
+    +"이 보드는 <b>각자 스스로 올린 값</b>입니다. 넥슨이 공개 API 를 내지 않아 게임에서 자동으로 "
+    +"가져올 방법이 없어 이렇게 만들었습니다 — 수치의 진위는 보장되지 않습니다.";
+}
+
+/* ---------- 저장 ---------- */
+/* 빌드 스크립트가 이 소스 전체에서 플레이스홀더를 치환하므로,
+   여기서는 토큰을 런타임에 조립해서 통째로 먹히지 않게 한다. */
+const TOK_STATE="{"+"{STATE}"+"}", TOK_SHELL="{"+"{SHELL}"+"}";
+function docFrom(board){
+  const b64=$("#shell").textContent.trim();
+  const tpl=new TextDecoder().decode(Uint8Array.from(atob(b64),c=>c.charCodeAt(0)));
+  const st=JSON.stringify({icons:ICONS, jobs:JOBS, portal:PORTAL, board:board})
+    .replace(/</g,"\\u003c");
+  return tpl.replace(TOK_STATE,()=>st).replace(TOK_SHELL,()=>b64);
+}
+function msg(t,cls){
+  const el=$("#saveMsg"); el.textContent=t;
+  el.style.color=cls==="bad"?"var(--fail)":cls==="ok"?"var(--pass)":"var(--ink-3)";
+}
+async function commit(board,okText){
+  if(!API){ msg("이 화면에서는 저장할 수 없습니다 (보기 전용).","bad"); return false; }
+  $("#btnSave").disabled=true; msg("저장 중…");
+  try{
+    await API.publish(docFrom(board));
+    msg(okText,"ok");
+    return true;
+  }catch(err){
+    const c=err&&err.code;
+    if(c==="conflict") msg("다른 사람이 먼저 등록했습니다 — 새 내용으로 새로고침됩니다. 다시 눌러주세요.","bad");
+    else if(c==="not_writer"||c==="not_granted"||c==="consent_required"){
+      canWrite=false; lockRead(); }
+    else if(c==="rate_limited") msg("저장이 너무 잦습니다. 잠시 뒤 다시 시도하세요.","bad");
+    else if(c==="too_large") msg("보드가 너무 커졌습니다. 오래된 기록을 지워주세요.","bad");
+    else msg("저장하지 못했습니다"+(c?(" ("+c+")"):"")+".","bad");
+    $("#btnSave").disabled=false;
+    return false;
+  }
+}
+async function save(){
+  const r=collect();
+  if(r.err){ msg(r.err,"bad"); return; }
+  const next=BOARD.filter(x=>x.n!==r.e.n).concat([r.e]);
+  try{ sessionStorage.setItem("mkr-board-draft",
+        JSON.stringify(Object.assign({},r.e,{raw:r.raw}))); }catch(e){}
+  try{ localStorage.setItem(MEKEY,r.e.n); }catch(e){}
+  await commit(next,"등록했습니다.");
+}
+async function remove(e){
+  if(!canWrite) return;
+  await commit(BOARD.filter(x=>!(x.n===e.n&&x.t===e.t)),"지웠습니다.");
+}
+function lockRead(){
+  $("#regCard").hidden=true;
+  $("#regSub").textContent="";
+  const n=document.createElement("p");
+  n.className="note neutral";
+  n.textContent="이 링크는 보기 전용입니다. 기록을 올리려면 편집 권한이 있는 링크가 필요합니다 — "
+    +"공유해 준 사람에게 편집 권한을 요청하세요.";
+  $(".sec").insertBefore(n,$(".sec").firstChild);
+  render();
+}
+$("#btnSave").addEventListener("click",save);
+$("#btnClear").addEventListener("click",()=>{
+  ["#fName","#fGuild","#fCp","#fStage"].forEach(s=>$(s).value="");
+  msg("");
+});
+["#fName","#fGuild","#fCp","#fStage"].forEach(s=>{
+  $(s).addEventListener("keydown",e=>{ if(e.key==="Enter") save(); });
+});
+
+/* 저장 직후 페이지가 새로고침되므로 직전 입력을 되살린다 */
+(function(){
+  let d=null; try{ d=JSON.parse(sessionStorage.getItem("mkr-board-draft")||"null"); }catch(e){}
+  if(!d) return;
+  $("#fName").value=d.n||""; $("#fGuild").value=d.g||"";
+  $("#fCp").value=d.raw||(d.cp?String(d.cp):""); $("#fStage").value=d.s||"";
+  if(d.j) setJobPick(d.j);
+})();
+
+render();
+
+/* 쓰기 가능 여부는 실제로 저장 권한이 붙은 뒤에야 알 수 있다 */
+if(window.claude&&window.claude.use){
+  window.claude.use("artifact").then(a=>{
+    API=a;
+    if(!a){ canWrite=false; lockRead(); return; }
+    canWrite=true; render();
+    $("#regSub").textContent="등록하면 이 링크를 가진 모두에게 반영됩니다";
+  }).catch(()=>{ canWrite=false; lockRead(); });
+}else{
+  canWrite=false; lockRead();
+}
+})();
+</script>

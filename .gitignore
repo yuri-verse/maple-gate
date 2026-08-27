@@ -1,0 +1,18 @@
+# 의존성·캐시
+node_modules/
+__pycache__/
+*.pyc
+.cache/
+
+# 넥슨 클라이언트 원본 — 용량 크고 재배포 불가 (조사 전용, 로컬에만)
+reference/
+
+# 빌드 중간 산출물 (배포엔 web-data.json 등만 필요)
+data/stages.json
+data/site-data.json
+
+# 빌드 결과물 — CI 가 dist/ 를 새로 만든다
+/index.html
+/artifact.html
+/board-artifact.html
+/dist/
