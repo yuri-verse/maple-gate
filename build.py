@@ -62,6 +62,11 @@ for token, fn in SLOTS:
 (dist / "data" / "bundle.js").write_text("\n".join(parts), encoding="utf-8")
 
 # 랭킹·공지는 따로 — 수집기가 이 파일만 갈아끼운다
+import shutil as _sh
+_sup = ROOT / "data" / "supabase.json"
+if _sup.exists():
+    _sh.copy(_sup, dist / "data" / "supabase.json")
+
 for fn, empty in (("ranking.json", {"source": None, "collectedAt": None, "rows": []}),
                   ("notices.json", {"source": None, "collectedAt": None, "notices": [], "events": []})):
     src = ROOT / "data" / fn

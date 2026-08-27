@@ -2885,6 +2885,24 @@ function stageInsights(){ progress(); tierCard(); jobRankCard(); hardCard(); }
    아티팩트는 외부는 물론 자기 데이터 파일도 못 부르므로 fetch 가 실패하고,
    그때는 등록형 보드 안내가 그대로 남는다. */
 let RANK=null;
+/* Supabase — 전투력 랭킹 원본 (배포 사이트에서만 접속됨). 실패하면 정적 파일로 폴백. */
+let SUPA=null;
+async function supaReady(){
+  if(SUPA!==null) return SUPA;
+  try{ const r=await fetch("data/supabase.json",{cache:"no-store"});
+    SUPA = r.ok ? await r.json() : false; }catch(e){ SUPA=false; }
+  return SUPA;
+}
+async function supaGet(path){
+  const c=await supaReady(); if(!c) return null;
+  try{
+    const r=await fetch(c.url.replace(/\/$/,"")+"/rest/v1/"+path,
+      {headers:{apikey:c.key, Authorization:"Bearer "+c.key}, cache:"no-store"});
+    if(!r.ok) return null;
+    return await r.json();
+  }catch(e){ return null; }
+}
+const cpNum=v=>typeof v==="number"?v:parseFloat(v);
 /* 직업 한글명 -> 아이콘 (랭킹 job 필드가 한글이라 매칭) */
 const KO2ID={}; DATA.jobs.forEach(j=>{KO2ID[j.ko]=j.id;});
 function rankIcon(job){ const id=KO2ID[job]; return id?ICONS[id]:""; }
@@ -2948,6 +2966,24 @@ function homeNews(){
 }
 
 async function loadRanking(){
+  // 1순위: Supabase (전체 사다리). count 로 총원도 받는다.
+  const sb=await supaGet("rankings?select=nickname,rank,guild,job,level,combat_power,popularity,server&order=combat_power.desc&limit=100");
+  if(sb&&sb.length){
+    let total=sb.length;
+    try{ const c=await supaReady();
+      const hr=await fetch(c.url.replace(/\/$/,"")+"/rest/v1/rankings?select=nickname&limit=1",
+        {headers:{apikey:c.key,Authorization:"Bearer "+c.key,Prefer:"count=exact"}});
+      const cr=hr.headers.get("content-range"); if(cr) total=parseInt(cr.split("/")[1],10)||total;
+    }catch(e){}
+    RANK={source:[{name:"MGF.GG",url:"https://mgf.gg/"}], collectedAt:"실시간(Supabase)",
+      total:total, rows:sb.map((r,i)=>({rank:r.rank||i+1, nickname:r.nickname, guild:r.guild,
+        job:r.job, level:r.level, combatPower:cpNum(r.combat_power), popularity:r.popularity, server:r.server}))};
+    top3Card(); renderLiveRankFromRANK(); return;
+  }
+  return loadRankingStatic();
+}
+function renderLiveRankFromRANK(){ drawLiveRank(); }
+async function loadRankingStatic(){
   let d=null;
   try{
     const r=await fetch("data/ranking.json",{cache:"no-store"});
@@ -2956,6 +2992,10 @@ async function loadRanking(){
   if(!d||!d.rows||!d.rows.length) return;
   RANK=d;
   top3Card();
+  drawLiveRank();
+}
+function drawLiveRank(){
+  const d=RANK; if(!d) return;
   const box=$("#liveRank"); box.textContent="";
   const wrap=document.createElement("div"); wrap.className="rkwrap";
   wrap.innerHTML='<div class="tscroll"><table><thead><tr>'
@@ -2980,8 +3020,8 @@ async function loadRanking(){
   const src=document.createElement("div"); src.className="rksrc";
   const names=(d.source||[]).map(s=>'<a href="'+s.url+'" target="_blank" rel="noopener">'
     +s.name+"</a>").join(" · ");
-  src.innerHTML="<span>출처 "+(names||"—")+"</span><span>수집 "+(d.collectedAt||"—")
-    +"</span><span>상위 50명 / 수집 "+d.rows.length+"명</span>";
+  src.innerHTML="<span>출처 "+(names||"—")+"</span><span>"+(d.collectedAt||"—")
+    +"</span><span>상위 50명"+(d.total?(" / 전체 "+d.total.toLocaleString("ko-KR")+"명"):"")+"</span>";
   box.appendChild(src);
 }
 /* 등록 링크에 지금 값을 실어 보낸다 — 보드에서 폼이 미리 채워진다 */
@@ -3018,14 +3058,7 @@ function search(q){
     RANK.rows.forEach(r=>{
       if(out.length>=6) return;
       if(r.nickname&&r.nickname.toLowerCase().indexOf(q)>=0)
-        out.push({k:"캐릭터", n:r.nickname, ico:rankIcon(r.job),
-          s:r.rank+"위 · "+(r.job||"")+(r.guild?(" · "+r.guild):"")+" · 전투력 "+fmt(r.combatPower),
-          go:()=>{ const lr=$("#liveRank"); if(lr){ lr.hidden=false;
-            const mm=$("#rankMore"); if(mm) mm.textContent="접기";
-            if(lr.scrollIntoView) lr.scrollIntoView({block:"center",behavior:"smooth"});
-            $$("#liveRank tbody tr").forEach(tr=>{
-              tr.style.background = tr.textContent.indexOf(r.nickname)>=0 ? "var(--accent-soft)" : ""; });
-          }}});
+        out.push(charHit(r));
     });
   }
   DATA.stages.forEach(s=>{
@@ -3057,6 +3090,21 @@ function search(q){
   });
   return out;
 }
+function charHit(r){
+  return {k:"캐릭터", n:r.nickname, ico:rankIcon(r.job),
+    s:(r.rank?r.rank+"위 · ":"")+(r.job||"")+(r.guild?(" · "+r.guild):"")+" · 전투력 "+fmt(r.combatPower),
+    go:()=>{ const lr=$("#liveRank"); if(lr){ lr.hidden=false;
+      const mm=$("#rankMore"); if(mm) mm.textContent="접기";
+      if(lr.scrollIntoView) lr.scrollIntoView({block:"center",behavior:"smooth"}); } }};
+}
+/* 전체(48만)에서 캐릭터 검색 — Supabase 있으면 서버에서 찾는다 */
+async function searchCharsRemote(q){
+  const rows=await supaGet("rankings?select=nickname,rank,guild,job,level,combat_power"
+    +"&nickname=ilike."+encodeURIComponent("*"+q+"*")+"&order=combat_power.desc&limit=6");
+  if(!rows) return [];
+  return rows.map(r=>charHit({rank:r.rank,nickname:r.nickname,guild:r.guild,job:r.job,
+    level:r.level,combatPower:cpNum(r.combat_power)}));
+}
 function renderSearch(){
   const r=search(gq.value);
   if(r===null){ gqOut.hidden=true; gqOut.textContent=""; return; }
@@ -3064,6 +3112,20 @@ function renderSearch(){
   if(!r.length){ const d=document.createElement("div");
     d.className="qempty"; d.textContent="찾는 게 없습니다. 스테이지는 36-8, 몬스터는 영문 이름으로 쳐보세요.";
     gqOut.appendChild(d); return; }
+  const qv=gq.value.trim();
+  if(qv.length>=1) searchCharsRemote(qv.toLowerCase()).then(cs=>{
+    if(gq.value.trim()!==qv||!cs.length) return;
+    const have=new Set([].slice.call(gqOut.querySelectorAll(".qn")).map(e=>e.textContent));
+    cs.forEach(x=>{ if(have.has(x.n)) return;
+      const b=document.createElement("button"); b.type="button"; b.className="qrow";
+      b.innerHTML=icoImg(x.ico,"qi")+'<div><div class="qn"></div><div class="qs"></div></div><span class="qkind"></span>';
+      b.querySelector(".qn").textContent=x.n; b.querySelector(".qs").textContent=x.s;
+      b.querySelector(".qkind").textContent=x.k;
+      b.addEventListener("click",()=>{ gqOut.hidden=true; gq.value=""; x.go(); });
+      gqOut.insertBefore(b, gqOut.firstChild);
+    });
+    gqOut.hidden=false;
+  });
   r.forEach(x=>{
     const b=document.createElement("button");
     b.type="button"; b.className="qrow";
