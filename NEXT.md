@@ -1,5 +1,33 @@
 # 다시 시작할 때 — 브리핑
 
+## 🚀 배포됨 (2026-08-27)
+
+- **라이브 사이트**: https://yuri-verse.github.io/maple-gate/  (GitHub Pages · 공개)
+- **저장소**: github.com/yuri-verse/maple-gate  (git remote origin, gh 로그인됨)
+- **아티팩트(미리보기)**: https://claude.ai/code/artifact/da0223a7-9ab7-45bc-a264-8c71871d2412
+  · 아티팩트는 CSP 로 외부 fetch 가 막혀 랭킹/공지가 안 뜬다 — 완전판은 라이브 사이트에서만.
+
+### 데이터 파이프라인 (전부 무료)
+- **전투력 랭킹**: mgf.gg 파싱 → **Supabase** `rankings` 테이블 (3000명, `pages:100`).
+  프론트가 Supabase 에서 읽고 이름 검색은 전체에서 실시간(`nickname=ilike`).
+  Supabase URL/publishable 키 = `data/supabase.json`(공개 안전).
+  쓰기용 service_role 키 = GitHub Secret `SUPABASE_SERVICE_KEY`(웹 UI 로 넣음, 절대 커밋 금지).
+- **공지·이벤트**: 넥슨 공식 포럼 API(`forum.nexon.com/api/v1/community/607/stickyThreads`) → `data/notices.json`.
+- **자동 갱신**: `.github/workflows/collect.yml` 3시간마다 (mgf 수집 → notices → Supabase 업서트 → 커밋).
+- **배포**: `.github/workflows/deploy.yml` push 시 `dist/` 를 Pages 로.
+
+### 다음에 이어서 할 만한 것
+1. **랭킹 인원 늘리기**: `tools/ranking-sources.json` 의 `pages` (100=3000명). 1만~3만은 한 번에 OK.
+   전체 48만(16,199페이지, ~7h)은 CI 6h 한도 초과 → 나눠 긁기 설계 필요.
+2. **유물 입력 UI** · **모델의 일반몹 데드라인**(원래 남은 계산기 과제, 아래 참조).
+3. `git`/`gh` 준비돼 있으니 코드 고치면 `git add/commit/push` → 자동 배포.
+
+⚠️ `reference/`(681MB, 넥슨 클라이언트 원본)와 `node_modules` 는 .gitignore — 커밋 금지.
+스크린샷 확인은 `tools/shot.js` (크로미움 로컬 설치됨, `tools/README-shots.md`).
+
+---
+
+
 마지막 작업: **2026-08-26**
 
 ## 지금 어디까지 왔나
